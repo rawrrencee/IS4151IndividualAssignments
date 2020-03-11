@@ -147,6 +147,23 @@ input.onButtonPressed(Button.B, function () {
         radio.sendString("" + playerOneDetails + "," + "RGR")
         radio.sendString("" + playerTwoDetails + "," + "RGR")
         serial.writeLine("Game commencing with board size = " + boardSize + ".")
+
+        //Init Board
+        serial.writeLine("")
+        serial.writeLine("***GAME BOARD***")
+
+        let board: number[] = []
+        let totalBoardSize = boardSize * boardSize
+        for (let i = 0; i < totalBoardSize; i++) {
+            board[i] = 0
+            serial.writeNumber(board[i])
+            if (i != 0 && (i + 1) % boardSize == 0) {
+                serial.writeLine("")
+            }
+        }
+
+        serial.writeLine("")
+
         playOrder = Math.randomRange(1, 2)
         if (playOrder === 1) {
             sendFirstMove(playerOneDetails) //Player One = Move 1/2 (First Move)
@@ -154,7 +171,7 @@ input.onButtonPressed(Button.B, function () {
             serial.writeLine("Player One starts first. Press A to select cell.")
         } else {
             sendFirstMove(playerTwoDetails)
-            sendFirstMove(playerOneDetails)
+            sendSecondMove(playerOneDetails)
             serial.writeLine("Player Two starts first. Press A to select cell.")
         }
         basic.showIcon(IconNames.Happy)
