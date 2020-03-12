@@ -5,6 +5,7 @@ let playerDetails: string
 let buffer1: string[]
 let xCoord = 0
 let yCoord = 0
+let boardSize = 0
 
 /* CONFIGURE */
 radio.setGroup(7)
@@ -16,7 +17,7 @@ input.onButtonPressed(Button.A, function () {
         pairWithController()
     }
     if (state === 4 || state === 5) {
-        if (xCoord < 9) {
+        if (xCoord < boardSize - 1) {
             xCoord += 1
         } else {
             xCoord = 0
@@ -27,7 +28,7 @@ input.onButtonPressed(Button.A, function () {
 
 input.onButtonPressed(Button.B, function () {
     if (state === 4 || state === 5) {
-        if (yCoord < 9) {
+        if (yCoord < boardSize - 1) {
             yCoord += 1
         } else {
             yCoord = 0
@@ -76,6 +77,9 @@ radio.onDataPacketReceived(function ({ receivedString }) {
     }
 
     if (state === 3) {
+        if (buffer1[0] === "BS") {
+            boardSize = parseInt(buffer1[1])
+        }
         if (buffer1[0] === deviceName) {
             if (buffer1[1] === "FM") {
                 state = 4 //Playing as Move 1/2
@@ -87,7 +91,7 @@ radio.onDataPacketReceived(function ({ receivedString }) {
                     # . . # #
                     `)
             } else if (buffer1[1] === "SM") {
-                state = 5 //Playing as Move 2/2
+                state = 6 //Waiting for instructions
                 basic.showLeds(`
                     . . # . .
                     # # . # #
@@ -104,6 +108,7 @@ radio.onDataPacketReceived(function ({ receivedString }) {
     if (state === 4) {
         if (buffer1[0] === deviceName) {
             if (buffer1[1] === "FFM") {
+                state = 6 //Waiting for response
                 basic.showString("")
             }
             if (buffer1[1] === "FM") {
@@ -130,7 +135,33 @@ radio.onDataPacketReceived(function ({ receivedString }) {
                     `)
             }
             if (buffer1[1] === "FSM") {
+                state = 6 //Waiting for response
                 basic.showString("")
+            }
+        }
+    }
+
+    if (state === 6) {
+        if (buffer1[0] === deviceName) {
+            if (buffer1[1] === "FM") {
+                state = 4 //Playing as Move 1/2
+                basic.showLeds(`
+                    . . # . .
+                    # . . # #
+                    # . . . #
+                    # . . # .
+                    # . . # #
+                    `)
+            }
+            if (buffer1[1] === "WSM") {
+                state = 5 //Playing as Move 2/2
+                basic.showLeds(`
+                    . . # . .
+                    # # . # #
+                    . # . . #
+                    # . . # .
+                    # # . # #
+                    `)
             }
         }
     }

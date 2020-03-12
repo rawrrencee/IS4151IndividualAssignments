@@ -7,6 +7,11 @@ let playerTwoDetails: string
 let display: grove.TM1637 = null
 let boardSize = 3
 let playOrder = 0
+let board: number[] = []
+let totalBoardSize = 0
+let xCoord = 0
+let yCoord = 0
+let boardIndexToMark = 0
 
 /* CONFIGURE */
 radio.setGroup(7)
@@ -59,6 +64,7 @@ radio.onDataPacketReceived(function ({ receivedString }) {
             if (buffer1[0] === playerOneDetails && buffer1[1] === "FM") {
                 radio.sendString("" + playerOneDetails + "," + "FFM") //Player One = Move 1/2 (Finished First Move)
                 serial.writeLine("Move 1/2: Player One marked (" + buffer1[2] + "," + buffer1[3] + ")")
+                markBoard(buffer1[2], buffer1[3], playerOneDetails)
                 radio.sendString("" + playerTwoDetails + "," + "WSM") //Player Two = Move 2/2 (Waiting Second Move)
                 serial.writeLine("Waiting for Player Two to make Move 2/2...")
                 state = 7 //Received Move 1/2, Waiting for Move 2/2
@@ -67,6 +73,7 @@ radio.onDataPacketReceived(function ({ receivedString }) {
             if (buffer1[0] === playerTwoDetails && buffer1[1] === "FM") {
                 radio.sendString("" + playerTwoDetails + "," + "FFM") //Player Two = Move 1/2 (Finished First Move)
                 serial.writeLine("Move 1/2: Player Two marked (" + buffer1[2] + "," + buffer1[3] + ")")
+                markBoard(buffer1[2], buffer1[3], playerTwoDetails)
                 radio.sendString("" + playerOneDetails + "," + "WSM") //Player Two = Move 2/2 (Waiting Second Move)
                 serial.writeLine("Waiting for Player One to make Move 2/2...")
                 state = 7 //Received Move 1/2, Waiting for Move 2/2
@@ -79,6 +86,7 @@ radio.onDataPacketReceived(function ({ receivedString }) {
             if (buffer1[0] === playerTwoDetails && buffer1[1] === "SM") {
                 radio.sendString("" + playerTwoDetails + "," + "FSM") //Player Two = Move 2/2 (Finished Second Move)
                 serial.writeLine("Move 2/2: Player Two marked (" + buffer1[2] + "," + buffer1[3] + ")")
+                markBoard(buffer1[2], buffer1[3], playerTwoDetails)
                 state = 6 //Received Move 2/2, Waiting for Move 1/2
                 sendFirstMove(playerOneDetails)
                 serial.writeLine("Waiting for Player One to make Move 1/2...")
@@ -87,6 +95,7 @@ radio.onDataPacketReceived(function ({ receivedString }) {
             if (buffer1[0] === playerOneDetails && buffer1[1] === "SM") {
                 radio.sendString("" + playerOneDetails + "," + "FSM") //Player Two = Move 2/2 (Finished Second Move)
                 serial.writeLine("Move 2/2: Player One marked (" + buffer1[2] + "," + buffer1[3] + ")")
+                markBoard(buffer1[2], buffer1[3], playerOneDetails)
                 state = 6 //Received Move 2/2, Waiting for Move 1/2
                 sendFirstMove(playerTwoDetails)
                 serial.writeLine("Waiting for Player Two to make Move 1/2...")
@@ -120,8 +129,7 @@ input.onButtonPressed(Button.A, function () {
         boardSize = 3
         basic.showNumber(boardSize)
         serial.writeLine("Please select size of game board. Press B when ready.")
-    }
-    if (state === 5) {
+    } else if (state === 5) {
         if (boardSize < 10) {
             boardSize += 1
         } else {
@@ -146,21 +154,19 @@ input.onButtonPressed(Button.B, function () {
         state = 6 //Game started
         radio.sendString("" + playerOneDetails + "," + "RGR")
         radio.sendString("" + playerTwoDetails + "," + "RGR")
+        radio.sendString("BS" + "," + boardSize)
+        radio.sendString("BS" + "," + boardSize)
         serial.writeLine("Game commencing with board size = " + boardSize + ".")
 
         //Init Board
         serial.writeLine("")
         serial.writeLine("***GAME BOARD***")
 
-        let board: number[] = []
-        let totalBoardSize = boardSize * boardSize
-        for (let i = 0; i < totalBoardSize; i++) {
-            board[i] = 0
-            serial.writeNumber(board[i])
-            if (i != 0 && (i + 1) % boardSize == 0) {
-                serial.writeLine("")
-            }
-        }
+        serial.writeLine("")
+
+        board = []
+        totalBoardSize = boardSize * boardSize
+        printEmptyBoard(totalBoardSize)
 
         serial.writeLine("")
 
@@ -194,6 +200,62 @@ function sendFirstMove(playerDetails: string) {
 
 function sendSecondMove(playerDetails: string) {
     radio.sendString("" + playerDetails + "," + "SM")
+}
+
+function markBoard(xCoordString: string, yCoordString: string, deviceName: string) {
+    xCoord = parseInt(xCoordString)
+    yCoord = parseInt(yCoordString)
+    boardIndexToMark = xCoord + (yCoord * boardSize)
+    if (deviceName === playerOneDetails) {
+        board[boardIndexToMark] = 1
+    } else if (deviceName === playerTwoDetails) {
+        board[boardIndexToMark] = -1
+    }
+}
+
+function printEmptyBoard(totalBoardSize: number) {
+    for (let i = 0; i < totalBoardSize; i++) {
+        board[i] = 0
+        if (i % boardSize === 0) {
+            if (board[i] === 0) {
+                serial.writeString("| _ |")
+            }
+        } else if (i % boardSize <= boardSize - 2) {
+            serial.writeString(" _ |")
+        } else if (i % boardSize === boardSize - 1) {
+            serial.writeLine(" _ |")
+        }
+    }
+}
+
+function printCurrentBoard() {
+    for (let i = 0; i < board.length; i++) {
+        if (i % boardSize === 0) {
+            if (board[i] === 0) {
+                serial.writeString("| _ |")
+            } else if (board[i] === 1) {
+                serial.writeString("| X |")
+            } else if (board[i] === -1) {
+                serial.writeString("| O |")
+            }
+        } else if (i % boardSize <= boardSize - 2) {
+            if (board[i] === 0) {
+                serial.writeString(" _ |")
+            } else if (board[i] === 1) {
+                serial.writeString(" X |")
+            } else if (board[i] === -1) {
+                serial.writeString(" O |")
+            }
+        } else if (i % boardSize === boardSize - 1) {
+            if (board[i] === 0) {
+                serial.writeLine(" _ |")
+            } else if (board[i] === 1) {
+                serial.writeLine(" X |")
+            } else if (board[i] === -1) {
+                serial.writeLine(" O |")
+            }
+        }
+    }
 }
 
 basic.showIcon(IconNames.Yes)
