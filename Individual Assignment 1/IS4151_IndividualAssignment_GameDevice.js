@@ -180,6 +180,23 @@ radio.onDataPacketReceived(function ({ receivedString }) {
             }
         }
     }
+
+    if (state === 4 || state === 5 || state === 6) {
+        if (buffer1[0] === deviceName) {
+            if (buffer1[1] === "WIN") {
+                basic.showIcon(IconNames.Yes)
+            } else if (buffer1[1] === "LOSE") {
+                basic.showIcon(IconNames.No)
+            } else if (buffer1[1] === "NSS") {
+                if (playerDetails === "P1") {
+                    state = 1
+                } else if (playerDetails === "P2") {
+                    state = 2
+                }
+                basic.showIcon(IconNames.Tortoise)
+            }
+        }
+    }
 })
 
 function pairWithController() {

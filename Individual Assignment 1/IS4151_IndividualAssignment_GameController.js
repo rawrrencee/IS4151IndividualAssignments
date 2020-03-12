@@ -12,6 +12,7 @@ let totalBoardSize = 0
 let xCoord = 0
 let yCoord = 0
 let boardIndexToMark = 0
+let boardIndexToCheckWin = 0
 
 /* CONFIGURE */
 radio.setGroup(7)
@@ -62,21 +63,53 @@ radio.onDataPacketReceived(function ({ receivedString }) {
     if (state === 6) {
         if (playOrder === 1) {
             if (buffer1[0] === playerOneDetails && buffer1[1] === "FM") {
-                radio.sendString("" + playerOneDetails + "," + "FFM") //Player One = Move 1/2 (Finished First Move)
-                serial.writeLine("Move 1/2: Player One marked (" + buffer1[2] + "," + buffer1[3] + ")")
-                markBoard(buffer1[2], buffer1[3], playerOneDetails)
-                radio.sendString("" + playerTwoDetails + "," + "WSM") //Player Two = Move 2/2 (Waiting Second Move)
-                serial.writeLine("Waiting for Player Two to make Move 2/2...")
-                state = 7 //Received Move 1/2, Waiting for Move 2/2
+                if (!checkBoardOccupancy(buffer1[2], buffer1[3])) {
+                    printCurrentBoard()
+                    serial.writeLine("ERROR IN MOVE 1/2: Player One marked occupied (" + buffer1[2] + "," + buffer1[3] + ")")
+                    return
+                } else {
+                    radio.sendString("" + playerOneDetails + "," + "FFM") //Player One = Move 1/2 (Finished First Move)
+                    serial.writeLine("Move 1/2: Player One marked (" + buffer1[2] + "," + buffer1[3] + ")")
+                    markBoard(buffer1[2], buffer1[3], playerOneDetails)
+                    printCurrentBoard()
+                    if (checkWin(buffer1[2], buffer1[3], playerOneDetails)) {
+                        serial.writeLine("Player One WIN! Resetting in 5 seconds...")
+                        radio.sendString("" + playerOneDetails + "," + "WIN")
+                        radio.sendString("" + playerTwoDetails + "," + "LOSE")
+                        basic.pause(5000)
+                        resetToNSS()
+                        return
+                    }
+
+                    radio.sendString("" + playerTwoDetails + "," + "WSM") //Player Two = Move 2/2 (Waiting Second Move)
+                    serial.writeLine("Waiting for Player Two to make Move 2/2...")
+                    state = 7 //Received Move 1/2, Waiting for Move 2/2
+                }
             }
         } else {
             if (buffer1[0] === playerTwoDetails && buffer1[1] === "FM") {
-                radio.sendString("" + playerTwoDetails + "," + "FFM") //Player Two = Move 1/2 (Finished First Move)
-                serial.writeLine("Move 1/2: Player Two marked (" + buffer1[2] + "," + buffer1[3] + ")")
-                markBoard(buffer1[2], buffer1[3], playerTwoDetails)
-                radio.sendString("" + playerOneDetails + "," + "WSM") //Player Two = Move 2/2 (Waiting Second Move)
-                serial.writeLine("Waiting for Player One to make Move 2/2...")
-                state = 7 //Received Move 1/2, Waiting for Move 2/2
+                if (!checkBoardOccupancy(buffer1[2], buffer1[3])) {
+                    printCurrentBoard()
+                    serial.writeLine("ERROR IN MOVE 1/2: Player Two marked occupied (" + buffer1[2] + "," + buffer1[3] + ")")
+                    return
+                } else {
+                    radio.sendString("" + playerTwoDetails + "," + "FFM") //Player Two = Move 1/2 (Finished First Move)
+                    serial.writeLine("Move 1/2: Player Two marked (" + buffer1[2] + "," + buffer1[3] + ")")
+                    markBoard(buffer1[2], buffer1[3], playerTwoDetails)
+                    printCurrentBoard()
+                    if (checkWin(buffer1[2], buffer1[3], playerTwoDetails)) {
+                        serial.writeLine("Player Two WIN! Resetting in 5 seconds...")
+                        radio.sendString("" + playerTwoDetails + "," + "WIN")
+                        radio.sendString("" + playerOneDetails + "," + "LOSE")
+                        basic.pause(5000)
+                        resetToNSS()
+                        return
+                    }
+
+                    radio.sendString("" + playerOneDetails + "," + "WSM") //Player Two = Move 2/2 (Waiting Second Move)
+                    serial.writeLine("Waiting for Player One to make Move 2/2...")
+                    state = 7 //Received Move 1/2, Waiting for Move 2/2
+                }
             }
         }
     }
@@ -84,21 +117,53 @@ radio.onDataPacketReceived(function ({ receivedString }) {
     if (state === 7) {
         if (playOrder === 1) {
             if (buffer1[0] === playerTwoDetails && buffer1[1] === "SM") {
-                radio.sendString("" + playerTwoDetails + "," + "FSM") //Player Two = Move 2/2 (Finished Second Move)
-                serial.writeLine("Move 2/2: Player Two marked (" + buffer1[2] + "," + buffer1[3] + ")")
-                markBoard(buffer1[2], buffer1[3], playerTwoDetails)
-                state = 6 //Received Move 2/2, Waiting for Move 1/2
-                sendFirstMove(playerOneDetails)
-                serial.writeLine("Waiting for Player One to make Move 1/2...")
+                if (!checkBoardOccupancy(buffer1[2], buffer1[3])) {
+                    printCurrentBoard()
+                    serial.writeLine("ERROR IN MOVE 2/2: Player Two marked occupied (" + buffer1[2] + "," + buffer1[3] + ")")
+                    return
+                } else {
+                    radio.sendString("" + playerTwoDetails + "," + "FSM") //Player Two = Move 2/2 (Finished Second Move)
+                    serial.writeLine("Move 2/2: Player Two marked (" + buffer1[2] + "," + buffer1[3] + ")")
+                    markBoard(buffer1[2], buffer1[3], playerTwoDetails)
+                    printCurrentBoard()
+                    if (checkWin(buffer1[2], buffer1[3], playerTwoDetails)) {
+                        serial.writeLine("Player Two WIN! Resetting in 5 seconds...")
+                        radio.sendString("" + playerTwoDetails + "," + "WIN")
+                        radio.sendString("" + playerOneDetails + "," + "LOSE")
+                        basic.pause(5000)
+                        resetToNSS()
+                        return
+                    }
+
+                    state = 6 //Received Move 2/2, Waiting for Move 1/2
+                    sendFirstMove(playerOneDetails)
+                    serial.writeLine("Waiting for Player One to make Move 1/2...")
+                }
             }
         } else {
             if (buffer1[0] === playerOneDetails && buffer1[1] === "SM") {
-                radio.sendString("" + playerOneDetails + "," + "FSM") //Player Two = Move 2/2 (Finished Second Move)
-                serial.writeLine("Move 2/2: Player One marked (" + buffer1[2] + "," + buffer1[3] + ")")
-                markBoard(buffer1[2], buffer1[3], playerOneDetails)
-                state = 6 //Received Move 2/2, Waiting for Move 1/2
-                sendFirstMove(playerTwoDetails)
-                serial.writeLine("Waiting for Player Two to make Move 1/2...")
+                if (!checkBoardOccupancy(buffer1[2], buffer1[3])) {
+                    printCurrentBoard()
+                    serial.writeLine("ERROR IN MOVE 2/2: Player One marked occupied (" + buffer1[2] + "," + buffer1[3] + ")")
+                    return
+                } else {
+                    radio.sendString("" + playerOneDetails + "," + "FSM") //Player Two = Move 2/2 (Finished Second Move)
+                    serial.writeLine("Move 2/2: Player One marked (" + buffer1[2] + "," + buffer1[3] + ")")
+                    markBoard(buffer1[2], buffer1[3], playerOneDetails)
+                    printCurrentBoard()
+                    if (checkWin(buffer1[2], buffer1[3], playerOneDetails)) {
+                        serial.writeLine("Player One WIN! Resetting in 5 seconds...")
+                        radio.sendString("" + playerOneDetails + "," + "WIN")
+                        radio.sendString("" + playerTwoDetails + "," + "LOSE")
+                        basic.pause(5000)
+                        resetToNSS()
+                        return
+                    }
+
+                    state = 6 //Received Move 2/2, Waiting for Move 1/2
+                    sendFirstMove(playerTwoDetails)
+                    serial.writeLine("Waiting for Player Two to make Move 1/2...")
+                }
             }
         }
     }
@@ -194,6 +259,32 @@ function initHandshake() {
     serial.writeLine("Pairing with this terminal for the board display program? - Y/N")
 }
 
+function resetToNSS() {
+    radio.sendString("" + playerOneDetails + "," + "NSS")
+    radio.sendString("" + playerTwoDetails + "," + "NSS")
+    state = 4
+    display.bit(0, 0)
+    display.bit(0, 1)
+    display.bit(0, 2)
+    display.bit(0, 3)
+    basic.showIcon(IconNames.Chessboard)
+    serial.writeLine("Press A to begin new game.")
+}
+
+function displayWinner(winValue: number) {
+    if (winValue === 1) {
+        display.bit(8, 0)
+        display.bit(8, 1)
+        display.bit(0, 2)
+        display.bit(0, 3)
+    } else if (winValue === -1) {
+        display.bit(0, 0)
+        display.bit(0, 1)
+        display.bit(8, 2)
+        display.bit(8, 3)
+    }
+}
+
 function sendFirstMove(playerDetails: string) {
     radio.sendString("" + playerDetails + "," + "FM")
 }
@@ -213,6 +304,75 @@ function markBoard(xCoordString: string, yCoordString: string, deviceName: strin
     }
 }
 
+function checkBoardOccupancy(xCoordString: string, yCoordString: string): boolean {
+    xCoord = parseInt(xCoordString)
+    yCoord = parseInt(yCoordString)
+    boardIndexToMark = xCoord + (yCoord * boardSize)
+
+    if (board[boardIndexToMark] === 0) {
+        //music.playTone(Note.F, music.beat(BeatFraction.Quarter))
+        return true
+    } else {
+        //music.playTone(Note.A, music.beat(BeatFraction.Half))
+        return false
+    }
+    return true
+}
+
+function checkWin(xCoordString: string, yCoordString: string, deviceName: string): boolean {
+    let requiredWinValue = 0
+    xCoord = parseInt(xCoordString)
+    yCoord = parseInt(yCoordString)
+
+    if (deviceName === playerOneDetails) {
+        requiredWinValue = 1
+    } else if (deviceName === playerTwoDetails) {
+        requiredWinValue = -1
+    }
+
+    if (checkRowWin(yCoord) === requiredWinValue) {
+        displayWinner(requiredWinValue)
+        return true
+    }
+
+    return false
+}
+
+function checkRowWin(yCoord: number): number {
+    let win = 0
+    boardIndexToCheckWin = yCoord * boardSize
+    for (let i = 0; i < boardSize; i++) {
+        if (win === 1) {
+            if (board[boardIndexToCheckWin + i] === -1 || board[boardIndexToCheckWin + i] === 0) {
+                return 0
+            }
+        } else if (win === -1) {
+            if (board[boardIndexToCheckWin + i] === 1 || board[boardIndexToCheckWin + i] === 0) {
+                return 0
+            }
+        } else if (board[boardIndexToCheckWin + i] === 0) {
+            return 0
+        } else if (board[boardIndexToCheckWin + i] === 1) {
+            win = 1
+        } else if (board[boardIndexToCheckWin + i] === -1) {
+            win = -1
+        }
+    }
+    return win
+}
+
+function checkColWin(xCoord: number, yCoord: number): boolean {
+    return false
+}
+
+function checkDiagonalWin(xCoord: number, yCoord: number): boolean {
+    return false
+}
+
+function checkAntiDiagonalWin(xCoord: number, yCoord: number): boolean {
+    return false
+}
+
 function printEmptyBoard(totalBoardSize: number) {
     for (let i = 0; i < totalBoardSize; i++) {
         board[i] = 0
@@ -229,6 +389,9 @@ function printEmptyBoard(totalBoardSize: number) {
 }
 
 function printCurrentBoard() {
+
+    serial.writeLine("")
+
     for (let i = 0; i < board.length; i++) {
         if (i % boardSize === 0) {
             if (board[i] === 0) {
@@ -256,6 +419,8 @@ function printCurrentBoard() {
             }
         }
     }
+
+    serial.writeLine("")
 }
 
 basic.showIcon(IconNames.Yes)
