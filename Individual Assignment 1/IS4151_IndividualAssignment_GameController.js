@@ -65,9 +65,6 @@ radio.onDataPacketReceived(function ({ receivedString }) {
                     if (checkWin(buffer1[2], buffer1[3], playerOneDetails)) {
                         return
                     }
-                    if (checkDraw) {
-
-                    }
                     radio.sendString("" + playerTwoDetails + "," + "WSM") //Player Two = Move 2/2 (Waiting Second Move)
                     serial.writeLine("Waiting for Player Two to make Move 2/2...")
                     state = 7 //Received Move 1/2, Waiting for Move 2/2
@@ -164,23 +161,23 @@ input.onButtonPressed(Button.AB, function () {
     } else if (state === 4) {
         serial.writeLine("Series ended.")
         if (playerOneScore > playerTwoScore) {
-            serial.writeLine("Final winner is Player One! Resetting in 5 seconds...")
+            serial.writeLine("Final winner is Player One! Resetting in 3 seconds...")
             radio.sendString("" + playerOneDetails + "," + "WIN")
             radio.sendString("" + playerTwoDetails + "," + "LOSE")
             displayFinalWinner(1)
-            basic.pause(5000)
+            basic.pause(3000)
         } else if (playerTwoScore > playerOneScore) {
-            serial.writeLine("Final winner is Player Two! Resetting in 5 seconds...")
+            serial.writeLine("Final winner is Player Two! Resetting in 3 seconds...")
             radio.sendString("" + playerTwoDetails + "," + "WIN")
             radio.sendString("" + playerOneDetails + "," + "LOSE")
             displayFinalWinner(-1)
-            basic.pause(5000)
+            basic.pause(3000)
         } else if (playerOneScore === playerTwoScore) {
-            serial.writeLine("The game ends in a draw! Resetting in 5 seconds...")
+            serial.writeLine("The game ends in a draw! Resetting in 3 seconds...")
             radio.sendString("" + playerOneDetails + "," + "DRAW")
             radio.sendString("" + playerTwoDetails + "," + "DRAW")
             displayFinalWinner(0)
-            basic.pause(5000)
+            basic.pause(3000)
         }
         resetToNSS()
         playerOneScore = 0
@@ -265,40 +262,40 @@ function initHandshake() {
 
 function processWin(winner: number) {
     if (winner === 1) {
-        serial.writeLine("Player One WIN! Resetting in 5 seconds...")
+        serial.writeLine("Player One WIN! Resetting in 3 seconds...")
         radio.sendString("" + playerOneDetails + "," + "WIN")
         radio.sendString("" + playerTwoDetails + "," + "LOSE")
-        playerOneScore += 12
+        playerOneScore += 1
         if (playerOneScore === 100) {
             playerOneScore = 0
         }
         display.bit(Math.floor(playerOneScore / 10), 0)
         display.bit(playerOneScore % 10, 1)
-        basic.pause(5000)
+        basic.pause(3000)
         resetToNSS()
         serial.writeLine("Press A to begin new game.")
     } else if (winner === -1) {
-        serial.writeLine("Player Two WIN! Resetting in 5 seconds...")
+        serial.writeLine("Player Two WIN! Resetting in 3 seconds...")
         radio.sendString("" + playerTwoDetails + "," + "WIN")
         radio.sendString("" + playerOneDetails + "," + "LOSE")
-        playerTwoScore += 12
+        playerTwoScore += 1
         if (playerTwoScore === 100) {
             playerTwoScore = 0
         }
-        display.bit(Math.floor(playerTwoScore / 10), 0)
-        display.bit(playerTwoScore % 10, 1)
-        basic.pause(5000)
+        display.bit(Math.floor(playerTwoScore / 10), 2)
+        display.bit(playerTwoScore % 10, 3)
+        basic.pause(3000)
         resetToNSS()
         serial.writeLine("Press A to begin new game.")
     } else if (winner === 0) {
-        serial.writeLine("The game ends in a draw! Resetting in 5 seconds...")
+        serial.writeLine("The game ends in a draw! Resetting in 3 seconds...")
         radio.sendString("" + playerOneDetails + "," + "DRAW")
         radio.sendString("" + playerTwoDetails + "," + "DRAW")
         display.bit(playerOneScore / 10, 0)
         display.bit(playerOneScore % 10, 1)
         display.bit(playerTwoScore / 10, 2)
         display.bit(playerTwoScore % 10, 3)
-        basic.pause(5000)
+        basic.pause(3000)
         resetToNSS()
         serial.writeLine("Press A to begin new game.")
     }
@@ -380,6 +377,26 @@ function checkWin(xCoordString: string, yCoordString: string, deviceName: string
         return true
     }
 
+    if (checkColWin(xCoord) === requiredWinValue) {
+        processWin(requiredWinValue)
+        return true
+    }
+
+    if (checkDiagonalWin() === requiredWinValue) {
+        processWin(requiredWinValue)
+        return true
+    }
+
+    if (checkAntiDiagonalWin() === requiredWinValue) {
+        processWin(requiredWinValue)
+        return true
+    }
+
+    if (checkDraw()) {
+        processWin(0)
+        return true
+    }
+
     return false
 }
 
@@ -406,20 +423,77 @@ function checkRowWin(yCoord: number): number {
     return win
 }
 
-function checkColWin(xCoord: number, yCoord: number): boolean {
-    return false
+function checkColWin(xCoord: number): number {
+    let win = 0
+    boardIndexToCheckWin = xCoord
+    for (let i = 0; i < boardSize; i++) {
+        if (win === 1) {
+            if (board[boardIndexToCheckWin + i * boardSize] === -1 || board[boardIndexToCheckWin + i * boardSize] === 0) {
+                return 0
+            }
+        } else if (win === -1) {
+            if (board[boardIndexToCheckWin + i * boardSize] === 1 || board[boardIndexToCheckWin + i * boardSize] === 0) {
+                return 0
+            }
+        } else if (board[boardIndexToCheckWin + i * boardSize] === 0) {
+            return 0
+        } else if (board[boardIndexToCheckWin + i * boardSize] === 1) {
+            win = 1
+        } else if (board[boardIndexToCheckWin + i * boardSize] === -1) {
+            win = -1
+        }
+    }
+    return win
 }
 
-function checkDiagonalWin(xCoord: number, yCoord: number): boolean {
-    return false
+function checkDiagonalWin(): number {
+    let win = 0
+    for (let i = 0; i < boardSize; i++) {
+        if (win === 1) {
+            if (board[i + i * boardSize] === -1 || board[i + i * boardSize] === 0) {
+                return 0
+            }
+        } else if (win === -1) {
+            if (board[i + i * boardSize] === 1 || board[i + i * boardSize] === 0) {
+                return 0
+            }
+        } else if (board[i + i * boardSize] === 0) {
+            return 0
+        } else if (board[i + i * boardSize] === 1) {
+            win = 1
+        } else if (board[i + i * boardSize] === -1) {
+            win = -1
+        }
+    }
+    return win
 }
 
-function checkAntiDiagonalWin(xCoord: number, yCoord: number): boolean {
-    return false
+function checkAntiDiagonalWin(): number {
+    let win = 0
+    let countdown = boardSize - 1
+    for (let i = 0; i < boardSize; i++) {
+        if (win === 1) {
+            if (board[countdown + boardSize * i] === -1 || board[countdown + boardSize * i] === 0) {
+                return 0
+            }
+        } else if (win === -1) {
+            if (board[countdown + boardSize * i] === 1 || board[countdown + boardSize * i] === 0) {
+                return 0
+            }
+        } else if (board[countdown + boardSize * i] === 0) {
+            return 0
+        } else if (board[countdown + boardSize * i] === 1) {
+            win = 1
+        } else if (board[countdown + boardSize * i] === -1) {
+            win = -1
+        }
+        countdown--;
+    }
+    return win
 }
 
 function checkDraw(): boolean {
-    for (let i = 0; i < boardSize; i++) {
+    for (let i = 0; i < totalBoardSize; i++) {
         if (board[i] === 0) {
             return false
         }
