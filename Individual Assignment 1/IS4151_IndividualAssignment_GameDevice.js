@@ -48,6 +48,25 @@ input.onButtonPressed(Button.AB, function () {
 radio.onDataPacketReceived(function ({ receivedString }) {
     buffer1 = receivedString.split(",")
 
+    if (state === 1 || state === 2 || state === 3 || state === 4 || state === 5 || state === 6) {
+        if (buffer1[0] === deviceName) {
+            if (buffer1[1] === "WIN") {
+                basic.showIcon(IconNames.Yes)
+            } else if (buffer1[1] === "LOSE") {
+                basic.showIcon(IconNames.No)
+            } else if (buffer1[1] === "DRAW") {
+                basic.showIcon(IconNames.Asleep)
+            } else if (buffer1[1] === "NSS") {
+                if (playerDetails === "P1") {
+                    state = 1
+                } else if (playerDetails === "P2") {
+                    state = 2
+                }
+                basic.showIcon(IconNames.Tortoise)
+            }
+        }
+    }
+
     //Pairing stage
     if (state === 0) {
         if (buffer1[0] === deviceName) {
@@ -64,7 +83,7 @@ radio.onDataPacketReceived(function ({ receivedString }) {
     }
 
     //Starting series
-    if (state === 1 || state === 2) {
+    else if (state === 1 || state === 2) {
         serial.writeLine(receivedString)
         if (buffer1[0] === deviceName) {
             if (buffer1[1] === "NSS") {
@@ -76,7 +95,7 @@ radio.onDataPacketReceived(function ({ receivedString }) {
         }
     }
 
-    if (state === 3) {
+    else if (state === 3) {
         if (buffer1[0] === "BS") {
             boardSize = parseInt(buffer1[1])
         }
@@ -105,7 +124,7 @@ radio.onDataPacketReceived(function ({ receivedString }) {
         }
     }
 
-    if (state === 4) {
+    else if (state === 4) {
         if (buffer1[0] === deviceName) {
             if (buffer1[1] === "FFM") {
                 state = 6 //Waiting for response
@@ -123,7 +142,7 @@ radio.onDataPacketReceived(function ({ receivedString }) {
         }
     }
 
-    if (state === 5) {
+    else if (state === 5) {
         if (buffer1[0] === deviceName) {
             if (buffer1[1] === "WSM") {
                 basic.showLeds(`
@@ -141,7 +160,7 @@ radio.onDataPacketReceived(function ({ receivedString }) {
         }
     }
 
-    if (state === 6) {
+    else if (state === 6) {
         if (buffer1[0] === deviceName) {
             if (buffer1[1] === "FM") {
                 state = 4 //Playing as Move 1/2
@@ -162,38 +181,6 @@ radio.onDataPacketReceived(function ({ receivedString }) {
                     # . . # .
                     # # . # #
                     `)
-            }
-        }
-    }
-
-    if (state === 4 || state === 5) {
-        if (buffer1[0] === deviceName) {
-            if (buffer1[1] === "STOP") {
-                serial.writeLine(receivedString)
-                if (playerDetails === "P1") {
-                    basic.showNumber(1)
-                    state = 1
-                } else if (playerDetails === "P2") {
-                    basic.showNumber(2)
-                    state = 2
-                }
-            }
-        }
-    }
-
-    if (state === 4 || state === 5 || state === 6) {
-        if (buffer1[0] === deviceName) {
-            if (buffer1[1] === "WIN") {
-                basic.showIcon(IconNames.Yes)
-            } else if (buffer1[1] === "LOSE") {
-                basic.showIcon(IconNames.No)
-            } else if (buffer1[1] === "NSS") {
-                if (playerDetails === "P1") {
-                    state = 1
-                } else if (playerDetails === "P2") {
-                    state = 2
-                }
-                basic.showIcon(IconNames.Tortoise)
             }
         }
     }
