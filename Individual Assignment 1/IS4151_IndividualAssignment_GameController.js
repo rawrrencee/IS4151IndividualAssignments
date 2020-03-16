@@ -352,10 +352,11 @@ function checkBoardOccupancy(xCoordString: string, yCoordString: string): boolea
     boardIndexToMark = xCoord + (yCoord * boardSize)
 
     if (board[boardIndexToMark] === 0) {
-        //music.playTone(Note.F, music.beat(BeatFraction.Quarter))
+        music.playTone(Note.E, music.beat(BeatFraction.Whole))
         return true
     } else {
-        //music.playTone(Note.A, music.beat(BeatFraction.Half))
+        music.playTone(Note.C, music.beat(BeatFraction.Half))
+        music.playTone(Note.C, music.beat(BeatFraction.Half))
         return false
     }
     return true
