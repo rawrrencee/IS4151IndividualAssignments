@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+  <title>IS4151 Individual Assignment 2</title>
+  <!-- Tell the browser to be responsive to screen width -->
+  <meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
+
+  <link rel="icon" href="">
+
+  <!-- Bootstrap 3.3.7 -->
+  <link rel="stylesheet"
+    href="{{ url_for('static', filename='/bower_components/bootstrap/dist/css/bootstrap.min.css') }}">
+  <!-- Font Awesome -->
+  <link rel="stylesheet"
+    href="{{ url_for('static', filename='/bower_components/font-awesome/css/font-awesome.min.css') }}">
+  <!-- Ionicons -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='/bower_components/Ionicons/css/ionicons.min.css') }}">
+  <!-- Select2 -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='/bower_components/select2/dist/css/select2.css') }}">
+  <!-- DataTables -->
+  <link rel="stylesheet"
+    href="{{ url_for('static', filename='/bower_components/datatables.net-bs/css/dataTables.bootstrap.min.css') }}">
+  <link rel="stylesheet"
+    href="{{ url_for('static', filename='/bower_components/datatables.net-bs/css/responsive.bootstrap.min.css') }}">
+  <!-- Google Font -->
+  <link rel="stylesheet"
+    href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,600,700,300italic,400italic,600italic">
+  <!-- iCheck for checkboxes and radio inputs -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='/plugins/iCheck/all.css') }}">
+  <!-- daterange picker -->
+  <link rel="stylesheet"
+    href="{{ url_for('static', filename='/bower_components/bootstrap-daterangepicker/daterangepicker.css') }}">
+  <!-- bootstrap datepicker -->
+  <link rel="stylesheet"
+    href="{{ url_for('static', filename='/bower_components/bootstrap-datepicker/dist/css/bootstrap-datepicker.min.css') }}">
+  <!--pace-->
+  <link rel="stylesheet" href="{{ url_for('static', filename='/plugins/pace/pace.css') }}">
+  <!-- Theme style -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='/dist/css/AdminLTE.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='/dist/css/skins/_all-skins.min.css') }}">
+
+  <!--=====================================
+  JAVASCRIPT PLUGINS
+  ======================================-->
+
+  <!-- jQuery 3 -->
+  <script src="{{ url_for('static', filename='/bower_components/jquery/dist/jquery.min.js') }}"></script>
+  <!-- jQuery UI -->
+  <script src="{{ url_for('static', filename='/bower_components/jquery-ui/jquery-ui.min.js') }}"></script>
+  <!-- Bootstrap 3.3.7 -->
+  <script src="{{ url_for('static', filename='/bower_components/bootstrap/dist/js/bootstrap.min.js') }}"></script>
+  <!-- SlimScroll -->
+  <script
+    src="{{ url_for('static', filename='/bower_components/jquery-slimscroll/jquery.slimscroll.min.js') }}"></script>
+  <!-- FastClick -->
+  <script src="{{ url_for('static', filename='/bower_components/fastclick/lib/fastclick.js') }}"></script>
+  <!-- AdminLTE App -->
+  <script src="{{ url_for('static', filename='/dist/js/adminlte.min.js') }}"></script>
+  <!-- Select2 -->
+  <script src="{{ url_for('static', filename='/bower_components/select2/dist/js/select2.full.min.js') }}"></script>
+  <!-- DataTables -->
+  <script
+    src="{{ url_for('static', filename='/bower_components/datatables.net/js/jquery.dataTables.min.js') }}"></script>
+  <script
+    src="{{ url_for('static', filename='/bower_components/datatables.net-bs/js/dataTables.bootstrap.min.js') }}"></script>
+  <script
+    src="{{ url_for('static', filename='/bower_components/datatables.net-bs/js/dataTables.responsive.min.js') }}"></script>
+  <script
+    src="{{ url_for('static', filename='/bower_components/datatables.net-bs/js/responsive.bootstrap.min.js') }}"></script>
+  <!-- SweetAlert2 -->
+  <script src="{{ url_for('static', filename='/plugins/sweetalert2/sweetalert2.all.js') }}"></script>
+  <!-- iCheck 1.0.1 -->
+  <script src="{{ url_for('static', filename='/plugins/iCheck/icheck.min.js') }}"></script>
+  <!-- date-range-picker -->
+  <script src="{{ url_for('static', filename='/bower_components/moment/min/moment.min.js') }}"></script>
+  <script
+    src="{{ url_for('static', filename='/bower_components/bootstrap-daterangepicker/daterangepicker.js') }}"></script>
+  <!-- bootstrap datepicker -->
+  <script
+    src="{{ url_for('static', filename='/bower_components/bootstrap-datepicker/dist/js/bootstrap-datepicker.min.js') }}"></script>
+  <!-- pace.js -->
+  <script src="{{ url_for('static', filename='/plugins/pace/pace.js') }}"></script>
+
+</head>
+
+<!--=====================================
+  BODY DOCUMENTATION
+======================================-->
+
+
+<body class="hold-transition skin-blue sidebar-mini login-page">
+
+  <header class="main-header">
+
+    <a href="home" class="logo">
+
+      <span class="logo-mini">
+        IS
+      </span>
+      <span class="logo-lg">
+        IS<b>4151</b>
+      </span>
+
+    </a>
+
+    <nav class="navbar navbar-static-top" role="navigation">
+      <a href="#" class="sidebar-toggle" data-toggle="push-menu" role="button">
+        <span class="sr-only">Toggle navigation</span>
+      </a>
+    </nav>
+
+
+  </header>
+
+  <aside class="main-sidebar">
+    <section class="sidebar">
+      <ul class="sidebar-menu" data-api="tree" data-accordion=0>
+        <li class="active">
+          <a href="home">
+            <i class="fa fa-home"></i>
+            <span>Home</span>
+          </a>
+        </li>
+      </ul>
+    </section>
+  </aside>
+
+  <div class="content-wrapper">
+    <div id="loading">
+      <img id="loading-image" src="{{ url_for('static', filename='/img/template/loading.gif') }}" alt="Loading..." />
+    </div>
+    
+    <section class="content-header">
+      <h1>
+        Home
+        <small>Welcome Page</small>
+      </h1>
+    </section>
+    <section class="content">
+      <div class="box">
+        <div class="box-header with-border">
+          <h3 class="box-title">Personal Information</h3>
+        </div>
+        <div class="box-body">
+          <p>
+            You are logged in as
+            <strong>Lawrence</strong>
+          </p>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <footer class="main-footer">
+    <strong>Copyright &copy;IS4151</a>
+    </strong>
+    All rights reserved.
+  </footer>
+
+</body>
+
+<script src="{{ url_for('static', filename='/js/index.js') }}"></script>
+
+</body>
+
+</html>
