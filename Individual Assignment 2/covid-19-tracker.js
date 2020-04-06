@@ -77,21 +77,21 @@ function sendPingRequest() {
     serial.writeLine("I (" + device_name + ") sent ping request, hops: " + hops)
     radio.sendString("req," + device_name + "," + hops + "," + ping_id)
     rcvMsgHistory.push(device_name + ping_id)
-    ping_id++
+    ping_id += 1
     basic.pause(500)
 }
 
 function sendPingResponse(req_name: string) {
     serial.writeLine("I (" + device_name + ") sent ping response, hops: " + hops)
     radio.sendString("rsp," + req_name + "," + device_name + "," + hops + "," + ping_id)
-    ping_id++
+    ping_id += 1
     basic.pause(500)
 }
 
 function sendCurrentHops(device_name: string, hops: number, ping_id: number) {
     radio.sendString("hops," + device_name + "," + hops + "," + ping_id)
     serial.writeLine("I (" + device_name + ") sent hops: " + hops + " , ping_id: " + ping_id)
-    ping_id++
+    ping_id += 1
     basic.pause(500)
 }
 
