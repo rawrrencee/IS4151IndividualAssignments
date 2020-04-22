@@ -2,7 +2,6 @@ import serial
 import time
 import sqlite3
 
-
 def sendCommand(command):
 		
 	command = command + '\n'
@@ -16,6 +15,46 @@ def waitResponse():
 	
 	return response
 
+def saveIntruderData(dataPackets):
+
+	c = conn.cursor()
+
+	for dataPacket in dataPackets:
+		data = dataPacket.split(':')
+		deviceName = data[0]
+		deviceId = ""
+		intruderDistrict = data[1]
+		temperature = int(data[2])
+
+		if (temperature > 38):
+			fever = 'Y'
+		else:
+			fever = 'N'
+
+		if (intruderDistrict != district):
+			intruder = 'Y'
+		else:
+			intruder = 'N'
+
+		deviceIdSql = "SELECT * FROM trackers WHERE deviceName =? LIMIT 1"
+		c.execute(deviceIdSql, (deviceName,))
+		records = c.fetchall()
+
+		if (records == None or len(records) <= 0):
+			for character in deviceName:
+				number = ord(character) - 96
+				deviceId = deviceId + str(number)
+		else:
+			deviceId = str(records[0][1])
+
+		insertSql = "INSERT INTO trackers (deviceId, deviceName, district, temperature, fever, intruder, timestamp) VALUES (?,?,?,?,?,?, datetime('now', 'localtime'))"
+
+		c.execute(insertSql, (deviceId, deviceName, str(intruderDistrict), str(temperature), fever, intruder,))
+	
+	conn.commit()
+	
+	dataPackets.clear()
+
 def saveData(dataPackets):
 	
 	c = conn.cursor()
@@ -24,12 +63,30 @@ def saveData(dataPackets):
 		
 		data = dataPacket.split(':')
 		serialNumber = data[1]
+		deviceId = ""
 		deviceName = dataPacket[0:5]
 		hops = dataPacket[5:6]
-		temp = dataPacket[6:8]
+		temperature = int(dataPacket[6:8])
+		fever = 'N'
+		if (temperature > 38):
+			fever = 'Y'
+		intruder = 'N'
 
-		sql = "INSERT INTO temperature (devicename, hops, temp, timestamp) VALUES('" + deviceName + "', " + hops + ", " + temp + ", datetime('now', 'localtime'))"
-		c.execute(sql)
+		deviceIdSql = "SELECT * FROM trackers WHERE deviceName =? LIMIT 1"
+		c.execute(deviceIdSql, (deviceName,))
+		records = c.fetchall()
+
+		if (records == None or len(records) <= 0):
+			for character in deviceName:
+				number = ord(character) - 96
+				deviceId = deviceId + str(number)
+		else:
+			deviceId = str(records[0][1])
+			
+
+		insertSql = "INSERT INTO trackers (deviceId, deviceName, district, temperature, fever, intruder, timestamp) VALUES (?,?,?,?,?,?, datetime('now', 'localtime'))"
+
+		c.execute(insertSql, (deviceId, deviceName, str(district), str(temperature), fever, intruder,))
 	
 	conn.commit()
 	
@@ -40,18 +97,23 @@ try:
 	print("Listening on COM4... Press CTRL+C to exit")	
 	ser = serial.Serial(port='COM4', baudrate=115200, timeout=1)
 
-	conn = sqlite3.connect('temperature.db')
+	conn = sqlite3.connect('edge.db')
 	
 	# Handshaking
 	sendCommand('handshake')
+	response = waitResponse().split('=')
+	radioControllerData = response[1].split(':')
+	district = radioControllerData[1]
+	print("District " + district + " connected via " + radioControllerData[0])
 	
 	strMicrobitDevices = ''
-	firstCycle = True
+	initCycle = True
+	numCycles = 0
 	
 	while strMicrobitDevices == None or len(strMicrobitDevices) <= 0:
 		
 		strMicrobitDevices = waitResponse()
-		time.sleep(10)
+		time.sleep(0.1)
 	
 	strMicrobitDevices = strMicrobitDevices.split('=')
 	
@@ -67,17 +129,17 @@ try:
 			
 			while True:
 
-				if (firstCycle):
+				numCycles = 0
+
+				if (initCycle):
 					time.sleep(5)
-					firstCycle = False
+					initCycle = False
 				else:
-					time.sleep(35)
-				
-				print('Sending command to all micro:bit devices...')
+					time.sleep(10)
 				
 				commandToTx = 'sensor=temp'
 				sendCommand('cmd:' + commandToTx)
-				print('Finished sending command to all micro:bit devices...')
+				print('Requesting for temperatures from trackers in District ' + district)
 				
 				if commandToTx.startswith('sensor='):
 					
@@ -86,7 +148,14 @@ try:
 					while strSensorValues == None or len(strSensorValues) <= 0:
 						
 						strSensorValues = waitResponse()
+						if (numCycles > 25):
+							numCycles = 0
+							break
 						time.sleep(0.1)
+						numCycles = numCycles + 1
+
+					if (strSensorValues == None or len(strSensorValues) <= 0):
+						continue
 
 					listSensorValues = strSensorValues.split(',')
 
@@ -99,6 +168,37 @@ try:
 							listSensorValues.remove(sensorValue)
 					
 					saveData(listSensorValues)
+
+				commandToTx = 'intruder=2'
+				sendCommand('cmd:' + commandToTx)
+				print('Detecting intruders not in District ' + district + '!')
+
+				if commandToTx.startswith('intruder='):
+					
+					intruderCheckValues = ''
+
+					while intruderCheckValues == None or len(intruderCheckValues) <= 0:
+						
+						intruderCheckValues = waitResponse()
+						if (numCycles > 20):
+							numCycles = 0
+							break
+						time.sleep(0.1)
+						numCycles = numCycles + 1
+					
+					if (intruderCheckValues == None or len(intruderCheckValues) <= 0):
+						continue
+
+					listIntruderValues = intruderCheckValues.split(',')
+
+					for intruderData in listIntruderValues:
+
+						print(intruderData)
+
+						if (intruderData.startswith('senso:1:0')):
+							listIntruderValues.remove(intruderData)
+					
+					saveIntruderData(listIntruderValues)
 
 except KeyboardInterrupt:
 		

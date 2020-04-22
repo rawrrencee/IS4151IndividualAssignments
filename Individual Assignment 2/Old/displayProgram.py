@@ -1,10 +1,10 @@
 import serial
 import time
 
-print("Listening on COM13... Press CTRL+C to exit")
+print("Listening on COM11... Press CTRL+C to exit")
 
 try:
-	ser = serial.Serial(port='COM13', baudrate=115200, timeout=1)
+	ser = serial.Serial(port='COM11', baudrate=115200, timeout=1)
 
 	while True:
 		msg = ser.readline()

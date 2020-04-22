@@ -6,7 +6,7 @@ app = connexion.App(__name__, specification_dir='./')
 @app.route('/')
 def index():
 
-	conn = sqlite3.connect('temperature.db')
+	conn = sqlite3.connect('edge.db')
 	c = conn.cursor()
 	c.execute('SELECT devicename, AVG(temp) AS averagetemp FROM temperature GROUP BY devicename ORDER BY devicename ASC')
 	results = c.fetchall()

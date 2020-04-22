@@ -8,9 +8,11 @@ let data = ""
 let response = ""
 let buffer: string[] = []
 let msgHistory: string[] = []
+let DISTRICT_ORIGIN = 1
+let district = DISTRICT_ORIGIN
 
 //CONFIGURATION
-radio.setGroup(1)
+radio.setGroup(DISTRICT_ORIGIN)
 radio.setTransmitPower(1)
 radio.setTransmitSerialNumber(true)
 basic.showIcon(IconNames.Yes)
@@ -19,7 +21,7 @@ basic.forever(function () {
     basic.showNumber(state)
 
     if (state == 1) {
-        if (input.runningTime() - handshakeStartTime > 10 * 1000) {
+        if (input.runningTime() - handshakeStartTime > 5 * 1000) {
             state = 2
             response = ""
             for (let microbitDevice of microbitDevices) {
@@ -32,7 +34,7 @@ basic.forever(function () {
             serial.writeLine("enrol=" + response)
         }
     } else if (state == 3) {
-        if (input.runningTime() - commandStartTime > 25 * 1000) {
+        if (input.runningTime() - commandStartTime > 5 * 1000) {
             response = ""
             for (let sensorValue of sensorValues) {
                 if (response.length > 0) {
@@ -44,6 +46,20 @@ basic.forever(function () {
             serial.writeLine("" + response)
             state = 2
         }
+    } else if (state == 4) {
+        if (input.runningTime() - commandStartTime > 10 * 1000) {
+            response = ""
+            for (let sensorValue of sensorValues) {
+                if (response.length > 0) {
+                    response = "" + response + "," + sensorValue
+                } else {
+                    response = sensorValue
+                }
+            }
+            serial.writeLine("" + response)
+            state = 2
+            radio.setGroup(DISTRICT_ORIGIN)
+        }
     }
 })
 
@@ -53,6 +69,7 @@ serial.onDataReceived(serial.delimiters(Delimiters.NewLine), function () {
         if (state == 0) {
             state = 1
             radio.sendString("handshake")
+            serial.writeLine("rc="+ control.deviceName() + ":" + DISTRICT_ORIGIN)
             handshakeStartTime = input.runningTime()
         }
     } else if (data.includes('cmd:')) {
@@ -61,9 +78,20 @@ serial.onDataReceived(serial.delimiters(Delimiters.NewLine), function () {
                 state = 3
                 commandStartTime = input.runningTime()
                 sensorValues = []
+                buffer = data.split(':')
+                radio.sendString("" + buffer[1])
             }
-            buffer = data.split(':')
-            radio.sendString("" + buffer[1])
+            if (data.includes('cmd:intruder=')) {
+                let command = data.split(':')
+                let commandData = command[1].split('=')
+                let districtToSwitch = commandData[1]
+                district = parseInt(districtToSwitch)
+                state = 4
+                radio.setGroup(parseInt(districtToSwitch))
+                commandStartTime = input.runningTime()
+                sensorValues = []
+                radio.sendString("sensor=temp")
+            }
         }
     }
 })
@@ -72,6 +100,11 @@ radio.onReceivedString(function (receivedString) {
     if (receivedString.includes("enrol=")) {
         if (state == 1) {
             buffer = receivedString.split("=")
+            for (let microbitDevice of microbitDevices) {
+                if (microbitDevice == buffer[1]) {
+                    return
+                }
+            }
             microbitDevices.push(buffer[1])
         }
     } else {
@@ -79,9 +112,9 @@ radio.onReceivedString(function (receivedString) {
             let serialNumber = radio.receivedPacket(RadioPacketProperty.SerialNumber)
             for (let sensorValue of sensorValues) {
                 //CHECK IF DEVICE ALREADY EXISTS IN HISTORY
-                if (sensorValue.substr(0, 4) == receivedString.substr(0, 4)) {
+                if (sensorValue.substr(0, 5) == receivedString.substr(0, 5)) {
                     //IF NO. OF HOPS OF NEW MSG IS HIGHER, DISCARD
-                    if (parseInt(sensorValue.substr(5, 5)) < parseInt(receivedString.substr(5, 5)) + 1) {
+                    if (parseInt(sensorValue.substr(5, 1)) < parseInt(receivedString.substr(5, 1)) + 1) {
                         return
                     } else {
                         //REPLACE OLD DATA PACKET
@@ -91,6 +124,15 @@ radio.onReceivedString(function (receivedString) {
                 }
             }
             sensorValues.push(receivedString + ":" + serialNumber)
+        } else if (state == 4) {
+            let deviceName = receivedString.substr(0, 5)
+            let numHops = parseInt(receivedString.substr(5, 1))
+            let temp = parseInt(receivedString.substr(6, 2))
+
+            if (numHops == 1) {
+                sensorValues.push(deviceName + ":" + district + ":" + temp)
+            }
+
         }
     }
 })
