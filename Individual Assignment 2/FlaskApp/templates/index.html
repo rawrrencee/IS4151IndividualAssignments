@@ -90,7 +90,7 @@
 ======================================-->
 
 
-<body class="hold-transition skin-blue sidebar-mini login-page">
+<body class="hold-transition skin-blue sidebar-mini sidebar-collapse login-page">
 
   <header class="main-header">
 
@@ -141,13 +141,111 @@
     <section class="content">
       <div class="box">
         <div class="box-header with-border">
-          <h3 class="box-title">Personal Information</h3>
+          <h3 class="box-title">Districts</h3>
         </div>
         <div class="box-body">
-          <p>
-            You are logged in as
-            <strong>Lawrence</strong>
-          </p>
+          <div class="row">
+            <div class="col-lg-12" style="margin-top: 20px;">
+              <h3 class="text-center"><b>District 1</b></h3>
+            </div>
+          </div>
+          <hr />
+          <div id="districtData">
+            <table id="districtTable" class="districtTable table table-hover table-bordered table-striped dt-responsive"
+              width="100%">
+              <thead>
+                <tr>
+                  <th>Device ID</th>
+                  <th>Device Name</th>
+                  <th>District</th>
+                  <th>Temperature</th>
+                  <th>Fever</th>
+                  <th>Intruder</th>
+                  <th>Timestamp</th>
+                </tr>
+              </thead>
+              <tbody id="districtTableBody">
+              </tbody>
+            </table>
+          </div>
+
+          <div class="row">
+            <div class="col-lg-12" style="margin-top: 20px;">
+              <h3 class="text-center"><b>District 2</b></h3>
+            </div>
+          </div>
+          <hr />
+          <div id="district2Data">
+            <table id="district2Table"
+              class="districtTable table table-hover table-bordered table-striped dt-responsive" width="100%">
+              <thead>
+                <tr>
+                  <th>Device ID</th>
+                  <th>Device Name</th>
+                  <th>District</th>
+                  <th>Temperature</th>
+                  <th>Fever</th>
+                  <th>Intruder</th>
+                  <th>Timestamp</th>
+                </tr>
+              </thead>
+              <tbody id="district2TableBody">
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div class="box">
+        <div class="box-header with-border">
+          <h3 class="box-title">Events</h3>
+        </div>
+        <div class="box-body">
+          <div class="row">
+            <div class="col-lg-12" style="margin-top: 20px;">
+              <h3 class="text-center"><b>District 1</b></h3>
+            </div>
+          </div>
+          <hr />
+          <div id="eventsData">
+            <table id="eventsTable" class="eventsTable table table-hover table-bordered table-striped dt-responsive"
+              width="100%">
+              <thead>
+                <tr>
+                  <th>Device ID</th>
+                  <th>Device Name</th>
+                  <th>District</th>
+                  <th>Event</th>
+                  <th>Timestamp</th>
+                </tr>
+              </thead>
+              <tbody id="eventsTableBody">
+              </tbody>
+            </table>
+          </div>
+
+          <div class="row">
+            <div class="col-lg-12" style="margin-top: 20px;">
+              <h3 class="text-center"><b>District 2</b></h3>
+            </div>
+          </div>
+          <hr />
+          <div id="events2Data">
+            <table id="events2Table" class="eventsTable table table-hover table-bordered table-striped dt-responsive"
+              width="100%">
+              <thead>
+                <tr>
+                  <th>Device ID</th>
+                  <th>Device Name</th>
+                  <th>District</th>
+                  <th>Event</th>
+                  <th>Timestamp</th>
+                </tr>
+              </thead>
+              <tbody id="events2TableBody">
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
     </section>

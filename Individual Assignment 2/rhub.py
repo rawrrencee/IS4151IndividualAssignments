@@ -1,7 +1,29 @@
 import serial
 import time
 import sqlite3
+import socket
 
+def server():
+	host = socket.gethostname()
+	port = 8888
+
+	s = socket.socket()
+	s.bind((host, port))
+
+	s.listen(1)
+	client_socket, adress = s.accept()
+	
+	print("Connection from: " + str(adress))
+	
+	data = client_socket.recv(1024).decode('utf-8')
+	
+	print('From online user: ' + data)
+
+	if (data == 'init=localLD'):
+		response = 'Local Lockdown Initialised'
+	
+	client_socket.send(response.encode('utf-8'))
+	
 def sendCommand(command):
 		
 	command = command + '\n'
@@ -25,16 +47,30 @@ def saveIntruderData(dataPackets):
 		deviceId = ""
 		intruderDistrict = data[1]
 		temperature = int(data[2])
+		event1Sql = ''
+		event2Sql = ''
 
 		if (temperature > 38):
 			fever = 'Y'
+
+
 		else:
 			fever = 'N'
+
+			event2Sql = "INSERT INTO events (deviceId, deviceName, district, event, timestamp) VALUES (?, ?, ?, '2', datetime('now', 'localtime'))"
 
 		if (intruderDistrict != district):
 			intruder = 'Y'
 		else:
 			intruder = 'N'
+		
+		if (fever == 'Y' and intruder == 'Y'):
+			event1Sql = "INSERT INTO events (deviceId, deviceName, district, event, timestamp) VALUES (?, ?, ?, '1', datetime('now', 'localtime'))"
+			event2Sql = "INSERT INTO events (deviceId, deviceName, district, event, timestamp) VALUES (?, ?, ?, '2', datetime('now', 'localtime'))"
+		elif (fever == 'Y' and intruder == 'N'):
+			event1Sql = "INSERT INTO events (deviceId, deviceName, district, event, timestamp) VALUES (?, ?, ?, '1', datetime('now', 'localtime'))"
+		elif (fever == 'N' and intruder == 'Y'):
+			event2Sql = "INSERT INTO events (deviceId, deviceName, district, event, timestamp) VALUES (?, ?, ?, '2', datetime('now', 'localtime'))"
 
 		deviceIdSql = "SELECT * FROM trackers WHERE deviceName =? LIMIT 1"
 		c.execute(deviceIdSql, (deviceName,))
@@ -50,6 +86,12 @@ def saveIntruderData(dataPackets):
 		insertSql = "INSERT INTO trackers (deviceId, deviceName, district, temperature, fever, intruder, timestamp) VALUES (?,?,?,?,?,?, datetime('now', 'localtime'))"
 
 		c.execute(insertSql, (deviceId, deviceName, str(intruderDistrict), str(temperature), fever, intruder,))
+
+		if (event1Sql != ''):
+			c.execute(event1Sql, (deviceId, deviceName, str(intruderDistrict),))
+
+		if (event2Sql != ''):
+			c.execute(event2Sql, (deviceId, deviceName, str(intruderDistrict),))
 	
 	conn.commit()
 	
@@ -68,8 +110,10 @@ def saveData(dataPackets):
 		hops = dataPacket[5:6]
 		temperature = int(dataPacket[6:8])
 		fever = 'N'
+		eventSql = ''
 		if (temperature > 38):
 			fever = 'Y'
+			eventSql = "INSERT INTO events (deviceId, deviceName, district, event, timestamp) VALUES (?, ?, ?, '1', datetime('now', 'localtime'))"
 		intruder = 'N'
 
 		deviceIdSql = "SELECT * FROM trackers WHERE deviceName =? LIMIT 1"
@@ -87,6 +131,9 @@ def saveData(dataPackets):
 		insertSql = "INSERT INTO trackers (deviceId, deviceName, district, temperature, fever, intruder, timestamp) VALUES (?,?,?,?,?,?, datetime('now', 'localtime'))"
 
 		c.execute(insertSql, (deviceId, deviceName, str(district), str(temperature), fever, intruder,))
+		
+		if (eventSql != ''):
+			c.execute(eventSql, (deviceId, deviceName, str(district),))
 	
 	conn.commit()
 	
@@ -102,6 +149,9 @@ try:
 	# Handshaking
 	sendCommand('handshake')
 	response = waitResponse().split('=')
+	if (response[0] == ''):
+		print('Handshake failed, check micro:bit radio controller.')
+		exit()
 	radioControllerData = response[1].split(':')
 	district = radioControllerData[1]
 	print("District " + district + " connected via " + radioControllerData[0])

@@ -8,6 +8,8 @@ DEVELOPMENT: let state = 1 (pretend already handshaken)
 DEVELOPMENT: let district = 2
 */
 let state = 1
+let personalWarningState = 0
+let temperatureDiff = 0
 let district = 2
 let randomWaitPeriod = 0
 let handshakeStartTime = 0
@@ -21,13 +23,17 @@ let alreadyBroadcasted = false
 radio.setGroup(district)
 radio.setTransmitPower(1)
 radio.setTransmitSerialNumber(true)
-basic.showIcon(IconNames.Yes)
 
 radio.onReceivedString(function (receivedString: string) {
     serial.writeLine("me: " + control.deviceName() + ", state = " + state + ", received string: " + receivedString)
 
+    if (receivedString.substr(0,5) == control.deviceName()) {
+        if (receivedString.includes("=warning")) {
+            personalWarningState = 1
+        }
+    }
+
     if (receivedString == "handshake") {
-        basic.showString("H")
 
         for (let msg of msgHistory) {
             if (msg == "handshake") {
@@ -90,7 +96,6 @@ radio.onReceivedString(function (receivedString: string) {
                     randomWait()
                     broadcast("" + control.deviceName() + numberOfHops + input.temperature(), true)
                     serial.writeLine("broadcasted: " + control.deviceName() + numberOfHops + input.temperature())
-                    basic.showString("T")
                 }
             }
         }
@@ -110,8 +115,16 @@ radio.onReceivedString(function (receivedString: string) {
                 }
             }
             if (!alreadyBroadcasted) {
-                rebroadcastMsg = receivedString.substr(0, 5) + (parseInt(receivedString.substr(5, 1)) + 1) + receivedString.substr(6, 2)
+                let deviceName = receivedString.substr(0, 5)
+                let numberOfHops = parseInt(receivedString.substr(5, 1))
+                let temp = parseInt(receivedString.substr(6, 2))
+                rebroadcastMsg = receivedString.substr(0, 5) + (numberOfHops + 1) + temp
                 broadcast(rebroadcastMsg, false)
+
+                if (numberOfHops == 1 && temp >= 36 && temp <= 38) {
+                    let personalWarningMsg = deviceName + "=warning"
+                    broadcast(personalWarningMsg, true)
+                }
                 return
             }
         }
@@ -123,6 +136,8 @@ input.onButtonPressed(Button.AB, function () {
 })
 
 basic.forever(function () {
+
+    displayLocalTemp()
 
     if (commandStartTime != 0) {
         if (input.runningTime() - commandStartTime > 5 * 1000) {
@@ -138,8 +153,60 @@ basic.forever(function () {
         }
     }
 
+    if (personalWarningState == 0) {
+        if (input.temperature() < 36) {
+            for (let i = 0; i < 5; i++) {
+                led.unplot(2, i)
+            }
+        } else {
+            personalWarningState = 1
+        }
+    }
+
+    if (personalWarningState == 1) {
+        if (input.temperature() >= 36) {
+            for (let i = 0; i < 5; i++) {
+                led.plot(2, i)
+            }
+        } else {
+            personalWarningState = 0
+        }
+    }
+
+
 })
 
+function displayLocalTemp() {
+    let previousTemperatureDiff = temperatureDiff
+    temperatureDiff = input.temperature() - 30
+    if (temperatureDiff <= 0) {
+        for (let i = 0; i < 5; i++) {
+            led.unplot(0, i)
+            led.unplot(1, i)
+        }
+    } else if (temperatureDiff >= 10) {
+        for (let i = 0; i < 5; i++) {
+            led.plot(0, i)
+            led.plot(1, i)
+        }
+    } else {
+        if (temperatureDiff <= 5) {
+            if (previousTemperatureDiff <= 5) {
+                led.unplot(0, previousTemperatureDiff - 1)
+            } else {
+                led.unplot(1, (previousTemperatureDiff % 5) - 1) 
+            }
+            led.plot(0, temperatureDiff - 1)
+        } else {
+            if (previousTemperatureDiff > 5) {
+                led.unplot(1, (previousTemperatureDiff % 5) - 1)
+            } else {
+                led.unplot(0, previousTemperatureDiff - 1) 
+            }
+            led.plot(1, (temperatureDiff % 5) - 1)
+        }
+    }
+}
 
 function broadcast(receivedString: string, ownPacket: boolean) {
     if (ownPacket) {
