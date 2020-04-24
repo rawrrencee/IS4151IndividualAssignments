@@ -93,6 +93,14 @@ serial.onDataReceived(serial.delimiters(Delimiters.NewLine), function () {
                 radio.sendString("sensor=temp")
             }
         }
+    } else if (data.includes('act=localLD')) {
+        radio.sendString('act=localLD')
+    } else if (data.includes('deact=localLD')) {
+        radio.sendString('deact=localLD')
+    } else if (data.includes('act=globalLD')) {
+        radio.sendString('act=globalLD')
+    } else if (data.includes('deact=globalLD')) {
+        radio.sendString('deact=globalLD')
     }
 })
 

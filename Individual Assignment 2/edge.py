@@ -37,7 +37,7 @@ def index():
 	
 	return html
 
-@app.route('/localLD')
+@app.route('/deactivateLocalLD')
 def client():
 	host = socket.gethostname()
 	port = 8888
@@ -47,7 +47,7 @@ def client():
 	try:
 		s.connect((host, port))
 
-		message = 'init=localLD'
+		message = 'deact=localLD'
 		
 		s.send(message.encode('utf-8'))
 		data = s.recv(1024).decode('utf-8')

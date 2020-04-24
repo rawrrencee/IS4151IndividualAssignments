@@ -33,6 +33,30 @@ radio.onReceivedString(function (receivedString: string) {
         }
     }
 
+    if (receivedString == "act=localLD") {
+        for (let i = 0; i < 5; i++){
+            led.plot(3, i)
+        }
+    }
+
+    if (receivedString == "deact=localLD") {
+        for (let i = 0; i < 5; i++){
+            led.unplot(3, i)
+        }
+    }
+
+    if (receivedString == "act=globalLD") {
+        for (let i = 0; i < 5; i++){
+            led.plot(4, i)
+        }
+    }
+
+    if (receivedString == "deact=globalLD") {
+        for (let i = 0; i < 5; i++){
+            led.unplot(4, i)
+        }
+    }
+
     if (receivedString == "handshake") {
 
         for (let msg of msgHistory) {

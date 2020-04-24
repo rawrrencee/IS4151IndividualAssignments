@@ -42,6 +42,7 @@ def saveIntruderData(dataPackets):
 	c = conn.cursor()
 
 	for dataPacket in dataPackets:
+		print('intruder data:' + dataPacket)
 		data = dataPacket.split(':')
 		deviceName = data[0]
 		deviceId = ""
@@ -57,7 +58,7 @@ def saveIntruderData(dataPackets):
 		else:
 			fever = 'N'
 
-			event2Sql = "INSERT INTO events (deviceId, deviceName, district, event, timestamp) VALUES (?, ?, ?, '2', datetime('now', 'localtime'))"
+			event2Sql = "INSERT INTO events (deviceId, deviceName, originDistrict, district, event, timestamp) VALUES (?, ?, ?, ?, '2', datetime('now', 'localtime'))"
 
 		if (intruderDistrict != district):
 			intruder = 'Y'
@@ -65,12 +66,12 @@ def saveIntruderData(dataPackets):
 			intruder = 'N'
 		
 		if (fever == 'Y' and intruder == 'Y'):
-			event1Sql = "INSERT INTO events (deviceId, deviceName, district, event, timestamp) VALUES (?, ?, ?, '1', datetime('now', 'localtime'))"
-			event2Sql = "INSERT INTO events (deviceId, deviceName, district, event, timestamp) VALUES (?, ?, ?, '2', datetime('now', 'localtime'))"
+			event1Sql = "INSERT INTO events (deviceId, deviceName, originDistrict, district, event, timestamp) VALUES (?, ?, ?, ?, '1', datetime('now', 'localtime'))"
+			event2Sql = "INSERT INTO events (deviceId, deviceName, originDistrict, district, event, timestamp) VALUES (?, ?, ?, ?, '2', datetime('now', 'localtime'))"
 		elif (fever == 'Y' and intruder == 'N'):
-			event1Sql = "INSERT INTO events (deviceId, deviceName, district, event, timestamp) VALUES (?, ?, ?, '1', datetime('now', 'localtime'))"
+			event1Sql = "INSERT INTO events (deviceId, deviceName, originDistrict, district, event, timestamp) VALUES (?, ?, ?, ?, '1', datetime('now', 'localtime'))"
 		elif (fever == 'N' and intruder == 'Y'):
-			event2Sql = "INSERT INTO events (deviceId, deviceName, district, event, timestamp) VALUES (?, ?, ?, '2', datetime('now', 'localtime'))"
+			event2Sql = "INSERT INTO events (deviceId, deviceName, originDistrict, district, event, timestamp) VALUES (?, ?, ?, ?, '2', datetime('now', 'localtime'))"
 
 		deviceIdSql = "SELECT * FROM trackers WHERE deviceName =? LIMIT 1"
 		c.execute(deviceIdSql, (deviceName,))
@@ -83,15 +84,42 @@ def saveIntruderData(dataPackets):
 		else:
 			deviceId = str(records[0][1])
 
-		insertSql = "INSERT INTO trackers (deviceId, deviceName, district, temperature, fever, intruder, timestamp) VALUES (?,?,?,?,?,?, datetime('now', 'localtime'))"
+		insertSql = "INSERT INTO trackers (deviceId, deviceName, originDistrict, district, temperature, fever, intruder, timestamp) VALUES (?,?,?,?,?,?,?, datetime('now', 'localtime'))"
 
-		c.execute(insertSql, (deviceId, deviceName, str(intruderDistrict), str(temperature), fever, intruder,))
+		c.execute(insertSql, (deviceId, deviceName, str(district), str(intruderDistrict), str(temperature), fever, intruder,))
 
 		if (event1Sql != ''):
-			c.execute(event1Sql, (deviceId, deviceName, str(intruderDistrict),))
+			checkOutstandingEventsSql = "SELECT * FROM events WHERE deactivated = 0"
+			c.execute(checkOutstandingEventsSql)
+			outstandingEvents = c.fetchall()
+			if (outstandingEvents == None or len(outstandingEvents) <= 0):
+				c.execute(event1Sql, (deviceId, deviceName, str(district), str(intruderDistrict),))
+				sendCommand('act=localLD')
+			else:
+				existingEvent1 = False
+				for event in outstandingEvents:
+					if (event[5] == 1):
+						existingEvent1 = True
+						break
+				if (existingEvent1 == False):
+					c.execute(event1Sql, (deviceId, deviceName, str(district), str(intruderDistrict),))
+					sendCommand('act=localLD')
 
 		if (event2Sql != ''):
-			c.execute(event2Sql, (deviceId, deviceName, str(intruderDistrict),))
+			checkOutstandingEventsSql = "SELECT * FROM events WHERE deactivated = 0"
+			c.execute(checkOutstandingEventsSql)
+			outstandingEvents = c.fetchall()
+			print(outstandingEvents)
+			if (outstandingEvents == None or len(outstandingEvents) <= 0):
+				c.execute(event2Sql, (deviceId, deviceName, str(district), str(intruderDistrict),))
+			else:
+				existingEvent2 = False
+				for event in outstandingEvents:
+					if (event[5] == 2):
+						existingEvent2 = True
+						break
+				if (existingEvent2 == False):
+					c.execute(event2Sql, (deviceId, deviceName, str(district), str(intruderDistrict),))
 	
 	conn.commit()
 	
@@ -113,7 +141,7 @@ def saveData(dataPackets):
 		eventSql = ''
 		if (temperature > 38):
 			fever = 'Y'
-			eventSql = "INSERT INTO events (deviceId, deviceName, district, event, timestamp) VALUES (?, ?, ?, '1', datetime('now', 'localtime'))"
+			eventSql = "INSERT INTO events (deviceId, deviceName, originDistrict, district, event, timestamp) VALUES (?, ?, ?, ?, '1', datetime('now', 'localtime'))"
 		intruder = 'N'
 
 		deviceIdSql = "SELECT * FROM trackers WHERE deviceName =? LIMIT 1"
@@ -128,13 +156,27 @@ def saveData(dataPackets):
 			deviceId = str(records[0][1])
 			
 
-		insertSql = "INSERT INTO trackers (deviceId, deviceName, district, temperature, fever, intruder, timestamp) VALUES (?,?,?,?,?,?, datetime('now', 'localtime'))"
+		insertSql = "INSERT INTO trackers (deviceId, deviceName, originDistrict, district, temperature, fever, intruder, timestamp) VALUES (?,?,?,?,?,?,?, datetime('now', 'localtime'))"
 
-		c.execute(insertSql, (deviceId, deviceName, str(district), str(temperature), fever, intruder,))
+		c.execute(insertSql, (deviceId, deviceName, str(district), str(district), str(temperature), fever, intruder,))
 		
 		if (eventSql != ''):
-			c.execute(eventSql, (deviceId, deviceName, str(district),))
-	
+			checkOutstandingEventsSql = "SELECT * FROM events WHERE deactivated = 0"
+			c.execute(checkOutstandingEventsSql)
+			outstandingEvents = c.fetchall()
+			if (outstandingEvents == None or len(outstandingEvents) <= 0):
+				c.execute(eventSql, (deviceId, deviceName, str(district), str(district),))
+				sendCommand('act=localLD')
+			else:
+				existingEvent1 = False
+				for event in outstandingEvents:
+					if (event[5] == 1):
+						existingEvent1 = True
+						break
+				if (existingEvent1 == False):
+					c.execute(eventSql, (deviceId, deviceName, str(district), str(district),))
+					sendCommand('act=localLD')
+
 	conn.commit()
 	
 	dataPackets.clear()

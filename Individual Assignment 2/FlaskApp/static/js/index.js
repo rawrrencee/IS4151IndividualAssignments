@@ -2,6 +2,7 @@ $(document).ready( function() {
     $.ajax({
         url: "http://127.0.0.1:5000/districts",
         method: "GET",
+        data: {district: 1},
         contentType: "application/json",
         success: function (answer) {
             console.log(answer);
@@ -14,7 +15,7 @@ $(document).ready( function() {
                 $("#districtTableBody").append(
                     `
                   <tr>
-                      <td class="text-center" colspan="6">No data available.</td>
+                      <td class="text-center" colspan="7">No data available.</td>
                   </tr>
                   `
                 );
@@ -26,11 +27,11 @@ $(document).ready( function() {
                     <tr>
                     <td>` + answer[i][1] + `</td>
                     <td>` + answer[i][2] + `</td>
-                    <td>` + answer[i][3] + `</td>
                     <td>` + answer[i][4] + `</td>
                     <td>` + answer[i][5] + `</td>
                     <td>` + answer[i][6] + `</td>
                     <td>` + answer[i][7] + `</td>
+                    <td>` + answer[i][8] + `</td>
                     </tr>
                     `
                     )
@@ -46,18 +47,21 @@ $(document).ready( function() {
                 var title = $(this).text();
                 $(this).append('<input type="text" class="col-search-input" style="width: 100%;" placeholder="Search ' + title + '" />');
             });
-            districtTable.columns().every(function () {
-                var districtTable = this;
-                $('input', this.header()).on('keyup change', function () {
-                  if (districtTable.search() !== this.value) {
-                    districtTable.search(this.value).draw();
-                  }
-                });
-              
-                $('input', this.header()).on('click', function (e) {
-                  e.stopPropagation();
-                });
-              });
+            if ($.fn.DataTable.isDataTable('#districtTable')) {
+                districtTable.columns().every(function () {
+                    var districtTable = this;
+                    $('input', this.header()).on('keyup change', function () {
+                      if (districtTable.search() !== this.value) {
+                        districtTable.search(this.value).draw();
+                      }
+                    });
+                  
+                    $('input', this.header()).on('click', function (e) {
+                      e.stopPropagation();
+                    });
+                  });
+            }
+
         }
     })
 
@@ -65,6 +69,7 @@ $(document).ready( function() {
     $.ajax({
         url: "http://127.0.0.1:5000/events",
         method: "GET",
+        data: {district: 1},
         contentType: "application/json",
         success: function (answer) {
             console.log(answer);
@@ -77,24 +82,41 @@ $(document).ready( function() {
                 $("#eventsTableBody").append(
                     `
                   <tr>
-                      <td class="text-center" colspan="6">No data available.</td>
+                      <td class="text-center" colspan="7">No current events in this district available.</td>
                   </tr>
                   `
                 );
             } else {
                 $("#eventsTableBody").html("");
                 for (let i = 0; i < answer.length; i++) {
-                    $('#eventsTableBody').append(
-                    `
-                    <tr>
-                    <td>` + answer[i][0] + `</td>
-                    <td>` + answer[i][1] + `</td>
-                    <td>` + answer[i][2] + `</td>
-                    <td>` + answer[i][3] + `</td>
-                    <td>` + answer[i][4] + `</td>
-                    </tr>
-                    `
-                    )
+                    if (answer[i][3] == 1) {
+                        $('#eventsTableBody').append(
+                            `
+                            <tr>
+                            <td>` + answer[i][0] + `</td>
+                            <td>` + answer[i][1] + `</td>
+                            <td>` + answer[i][2] + `</td>
+                            <td>` + answer[i][3] + `</td>
+                            <td>` + answer[i][4] + `</td>
+                            <td><button class="deactivateLocalLD btn btn-sm btn-info" id="deactivateEvent`+ answer[i][3] +`_district` + answer[i][2] + `" type="button" data-deviceId="`+ answer[i][0] + `" data-originDistrict="1" data-district="` + answer[i][2] + `" data-event="`+ answer[i][3] + `"><i class="fa fa-close"></i></button></td>
+                            </tr>
+                            `
+                            )
+                    } else {
+                        $('#eventsTableBody').append(
+                            `
+                            <tr>
+                            <td>` + answer[i][0] + `</td>
+                            <td>` + answer[i][1] + `</td>
+                            <td>` + answer[i][2] + `</td>
+                            <td>` + answer[i][3] + `</td>
+                            <td>` + answer[i][4] + `</td>
+                            <td><button disabled class="btn btn-sm btn-info" id="deactivateEvent`+ answer[i][3] +`_district` + answer[i][2] + `" type="button" data-deviceId="`+ answer[i][0] + `" data-district="` + answer[i][2] + `" data-event="`+ answer[i][3] + `"><i class="fa fa-close"></i></button></td>
+                            </tr>
+                            `
+                            )
+                    }
+
                 }
                 if (!$.fn.DataTable.isDataTable('#eventsTable')) {
                     var eventsTable = $("#eventsTable").DataTable({
@@ -107,21 +129,41 @@ $(document).ready( function() {
                 var title = $(this).text();
                 $(this).append('<input type="text" class="col-search-input" style="width: 100%;" placeholder="Search ' + title + '" />');
             });
-            eventsTable.columns().every(function () {
-                var eventsTable = this;
-                $('input', this.header()).on('keyup change', function () {
-                  if (eventsTable.search() !== this.value) {
-                    eventsTable.search(this.value).draw();
-                  }
+            if ($.fn.DataTable.isDataTable('#eventsTable')) {
+                eventsTable.columns().every(function () {
+                    var eventsTable = this;
+                    $('input', this.header()).on('keyup change', function () {
+                    if (eventsTable.search() !== this.value) {
+                        eventsTable.search(this.value).draw();
+                    }
+                    });
+                
+                    $('input', this.header()).on('click', function (e) {
+                    e.stopPropagation();
+                    });
                 });
-              
-                $('input', this.header()).on('click', function (e) {
-                  e.stopPropagation();
-                });
-              });
+            }
         }
     })
 });
+
+$(document).on('click', '.deactivateLocalLD', function() {
+
+    let deviceId = $(this).data("deviceid");
+    let originDistrict = $(this).data("origindistrict");
+    let district = $(this).data("district");
+    let event = $(this).data("event");
+
+    $.ajax({
+        url: "http://localhost:5001/deactivateLocalLD",
+        method: "POST",
+        data: {district: 1},
+        contentType: "application/json",
+        success: function (answer) {
+            console.log(answer);
+        }
+    });
+})
 
 $('#postSampleDataButton').click(function() {
     console.log('button clicked');
