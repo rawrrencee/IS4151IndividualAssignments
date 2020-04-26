@@ -2,6 +2,19 @@ import serial
 import time
 import sqlite3
 import socket
+"""
+import RPi.GPIO as GPIO
+
+# Pin Definitions
+ledRedPin = 7
+ledGreenPin = 13
+ledBluePin = 15
+GPIO.setmode(GPIO.BOARD)
+GPIO.setup(ledRedPin, GPIO.OUT)
+GPIO.setup(ledGreenPin, GPIO.OUT)
+GPIO.setup(ledBluePin, GPIO.OUT)
+GPIO.output(ledGreenPin, True)
+"""
 
 def listenOnServer():
 	host = socket.gethostname()
@@ -31,6 +44,7 @@ def listenOnServer():
 			conn.commit()
 			
 			sendMessageResponse = 'Local Lockdown Deactivated'
+			# GPIO.output(ledRedPin, False)
 
 		elif (data == 'act=globalLD'):
 			sendCommand('act=globalLD')
@@ -84,6 +98,8 @@ def saveIntruderData(dataPackets):
 
 		if (intruderDistrict != district):
 			intruder = 'Y'
+			# GPIO.output(ledBluePin, False)
+
 		else:
 			intruder = 'N'
 		
@@ -113,6 +129,7 @@ def saveIntruderData(dataPackets):
 		if (event1Sql != ''):
 			c.execute(event1Sql, (deviceId, deviceName, str(district), str(intruderDistrict),))
 			sendCommand('act=localLD')
+			# GPIO.output(ledRedPin, True)
 		
 		if (event2Sql != ''):
 			c.execute(event2Sql, (deviceId, deviceName, str(district), str(intruderDistrict),))
@@ -194,6 +211,7 @@ def saveData(dataPackets):
 		if (eventSql != ''):
 			c.execute(eventSql, (deviceId, deviceName, str(district), str(district),))
 			sendCommand('act=localLD')
+			# GPIO.output(ledRedPin, True)
 
 		""" CHECKS IF THERE ARE OUTSTANDING EVENTS (SO ONLY 1 ROW PER EVENT IS PUBLISHED)
 		if (eventSql != ''):

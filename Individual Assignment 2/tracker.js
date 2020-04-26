@@ -14,7 +14,7 @@ let district = 1
 let randomWaitPeriod = 0
 let handshakeStartTime = 0
 let commandStartTime = 0
-let numberOfHops = 1x
+let numberOfHops = 1
 let buffer: string[] = []
 let msgHistory: string[] = []
 let alreadyBroadcasted = false
@@ -111,7 +111,7 @@ radio.onReceivedString(function (receivedString: string) {
         if (!alreadyBroadcasted) {
             broadcast(receivedString, true)
         }
-
+        
         for (let i = 0; i < 5; i++){
             led.unplot(4, i)
         }

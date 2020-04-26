@@ -1,0 +1,9 @@
+// IP ADDRESSES
+
+cloudserver: 192.168.1.54
+district1edge: 192.168.1.23
+district2edge: 192.168.1.178
+
+// PORTS
+district1radiocontroller: /dev/ttyACM0
+district2radiocontroller: /dev/ttyACM0

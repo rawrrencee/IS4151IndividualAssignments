@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+  <title>IS4151 Individual Assignment 2</title>
+  <!-- Tell the browser to be responsive to screen width -->
+  <meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
+
+  <link rel="icon" href="">
+
+  <!-- Bootstrap 3.3.7 -->
+  <link rel="stylesheet"
+    href="{{ url_for('static', filename='/bower_components/bootstrap/dist/css/bootstrap.min.css') }}">
+  <!-- Font Awesome -->
+  <link rel="stylesheet"
+    href="{{ url_for('static', filename='/bower_components/font-awesome/css/font-awesome.min.css') }}">
+  <!-- Ionicons -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='/bower_components/Ionicons/css/ionicons.min.css') }}">
+  <!-- Select2 -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='/bower_components/select2/dist/css/select2.css') }}">
+  <!-- DataTables -->
+  <link rel="stylesheet"
+    href="{{ url_for('static', filename='/bower_components/datatables.net-bs/css/dataTables.bootstrap.min.css') }}">
+  <link rel="stylesheet"
+    href="{{ url_for('static', filename='/bower_components/datatables.net-bs/css/responsive.bootstrap.min.css') }}">
+  <!-- iCheck for checkboxes and radio inputs -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='/plugins/iCheck/all.css') }}">
+  <!-- daterange picker -->
+  <link rel="stylesheet"
+    href="{{ url_for('static', filename='/bower_components/bootstrap-daterangepicker/daterangepicker.css') }}">
+  <!-- bootstrap datepicker -->
+  <link rel="stylesheet"
+    href="{{ url_for('static', filename='/bower_components/bootstrap-datepicker/dist/css/bootstrap-datepicker.min.css') }}">
+  <!--pace-->
+  <link rel="stylesheet" href="{{ url_for('static', filename='/plugins/pace/pace.css') }}">
+  <!-- Theme style -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='/dist/css/AdminLTE.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='/dist/css/skins/_all-skins.min.css') }}">
+
+  <!--=====================================
+  JAVASCRIPT PLUGINS
+  ======================================-->
+
+  <!-- jQuery 3 -->
+  <script src="{{ url_for('static', filename='/bower_components/jquery/dist/jquery.min.js') }}"></script>
+  <!-- jQuery UI -->
+  <script src="{{ url_for('static', filename='/bower_components/jquery-ui/jquery-ui.min.js') }}"></script>
+  <!-- Bootstrap 3.3.7 -->
+  <script src="{{ url_for('static', filename='/bower_components/bootstrap/dist/js/bootstrap.min.js') }}"></script>
+  <!-- SlimScroll -->
+  <script
+    src="{{ url_for('static', filename='/bower_components/jquery-slimscroll/jquery.slimscroll.min.js') }}"></script>
+  <!-- FastClick -->
+  <script src="{{ url_for('static', filename='/bower_components/fastclick/lib/fastclick.js') }}"></script>
+  <!-- AdminLTE App -->
+  <script src="{{ url_for('static', filename='/dist/js/adminlte.min.js') }}"></script>
+  <!-- Select2 -->
+  <script src="{{ url_for('static', filename='/bower_components/select2/dist/js/select2.full.min.js') }}"></script>
+  <!-- DataTables -->
+  <script
+    src="{{ url_for('static', filename='/bower_components/datatables.net/js/jquery.dataTables.min.js') }}"></script>
+  <script
+    src="{{ url_for('static', filename='/bower_components/datatables.net-bs/js/dataTables.bootstrap.min.js') }}"></script>
+  <script
+    src="{{ url_for('static', filename='/bower_components/datatables.net-bs/js/dataTables.responsive.min.js') }}"></script>
+  <script
+    src="{{ url_for('static', filename='/bower_components/datatables.net-bs/js/responsive.bootstrap.min.js') }}"></script>
+  <!-- SweetAlert2 -->
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@9"></script>
+  <!-- iCheck 1.0.1 -->
+  <script src="{{ url_for('static', filename='/plugins/iCheck/icheck.min.js') }}"></script>
+  <!-- date-range-picker -->
+  <script src="{{ url_for('static', filename='/bower_components/moment/min/moment.min.js') }}"></script>
+  <script
+    src="{{ url_for('static', filename='/bower_components/bootstrap-daterangepicker/daterangepicker.js') }}"></script>
+  <!-- bootstrap datepicker -->
+  <script
+    src="{{ url_for('static', filename='/bower_components/bootstrap-datepicker/dist/js/bootstrap-datepicker.min.js') }}"></script>
+  <!-- pace.js -->
+  <script src="{{ url_for('static', filename='/plugins/pace/pace.js') }}"></script>
+
+</head>
+
+<!--=====================================
+  BODY DOCUMENTATION
+======================================-->
+
+
+<body class="hold-transition skin-blue sidebar-mini sidebar-collapse login-page">
+
+  <header class="main-header">
+
+    <a href="" class="logo">
+
+      <span class="logo-mini">
+        IS
+      </span>
+      <span class="logo-lg">
+        IS<b>4151</b>
+      </span>
+
+    </a>
+
+    <nav class="navbar navbar-static-top" role="navigation">
+      <a href="#" class="sidebar-toggle" data-toggle="push-menu" role="button">
+        <span class="sr-only">Toggle navigation</span>
+      </a>
+    </nav>
+
+
+  </header>
+
+  <aside class="main-sidebar">
+    <section class="sidebar">
+      <ul class="sidebar-menu" data-api="tree" data-accordion=0>
+        <li class="active">
+          <a href="home">
+            <i class="fa fa-home"></i>
+            <span>Home</span>
+          </a>
+        </li>
+      </ul>
+    </section>
+  </aside>
+
+  <div class="content-wrapper">
+    <div id="loading">
+      <img id="loading-image" src="{{ url_for('static', filename='/img/template/loading.gif') }}" alt="Loading..." />
+    </div>
+
+    <section class="content-header">
+      <h1>
+        Home
+        <small>Welcome Page</small>
+      </h1>
+    </section>
+    <section class="content">
+      <div class="box">
+        <div class="box-header with-border">
+          <h3 class="box-title">Districts</h3>
+        </div>
+        <div class="box-body">
+          <div class="row">
+            <div class="col-lg-12" style="margin-top: 20px;">
+              <h3 class="text-center"><b>District 1</b></h3>
+            </div>
+          </div>
+          <hr />
+          <div id="districtData">
+            <table id="districtTable" class="districtTable table table-hover table-bordered table-striped dt-responsive"
+              width="100%">
+              <thead>
+                <tr>
+                  <th>Device ID</th>
+                  <th>Device Name</th>
+                  <th>District</th>
+                  <th>Temperature</th>
+                  <th>Fever</th>
+                  <th>Intruder</th>
+                  <th>Timestamp</th>
+                </tr>
+              </thead>
+              <tbody id="districtTableBody">
+              </tbody>
+            </table>
+          </div>
+
+          <div class="row">
+            <div class="col-lg-12" style="margin-top: 20px;">
+              <h3 class="text-center"><b>District 2</b></h3>
+            </div>
+          </div>
+          <hr />
+          <div id="district2Data">
+            <table id="district2Table"
+              class="districtTable table table-hover table-bordered table-striped dt-responsive" width="100%">
+              <thead>
+                <tr>
+                  <th>Device ID</th>
+                  <th>Device Name</th>
+                  <th>District</th>
+                  <th>Temperature</th>
+                  <th>Fever</th>
+                  <th>Intruder</th>
+                  <th>Timestamp</th>
+                </tr>
+              </thead>
+              <tbody id="district2TableBody">
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div class="box">
+        <div class="box-header with-border">
+          <h3 class="box-title">Events</h3>
+        </div>
+        <div class="box-body">
+          <div class="row">
+            <h3 class="text-center"><b>Global Lockdown Status</b></h3>
+            <div id="currentGlobalLDStatusText"></div>
+          </div>
+          <div class="row" style="margin-top: 20px;">
+            <div class="col-lg-12 text-center">
+              <button id="activateGlobalLDButton" type="button" class="btn btn-sm btn-danger">Activate Global Lockdown</button> 
+              <button id="deactivateGlobalLDButton" type="button" class="btn btn-sm btn-success">Dectivate Global Lockdown</button> 
+            </div>
+          </div>
+          <hr />
+          <div class="row">
+            <div class="col-lg-12" style="margin-top: 20px;">
+              <h3 class="text-center"><b>District 1</b></h3>
+            </div>
+          </div>
+          <hr />
+          <div id="eventsData">
+            <table id="eventsTable" class="eventsTable table table-hover table-bordered table-striped dt-responsive"
+              width="100%">
+              <thead>
+                <tr>
+                  <th>Device ID</th>
+                  <th>Device Name</th>
+                  <th>District</th>
+                  <th>Event</th>
+                  <th>Timestamp</th>
+                  <th>Deactivate</th>
+                </tr>
+              </thead>
+              <tbody id="eventsTableBody">
+              </tbody>
+            </table>
+          </div>
+
+          <div class="row">
+            <div class="col-lg-12" style="margin-top: 20px;">
+              <h3 class="text-center"><b>District 2</b></h3>
+            </div>
+          </div>
+          <hr />
+          <div id="events2Data">
+            <table id="events2Table" class="eventsTable table table-hover table-bordered table-striped dt-responsive"
+              width="100%">
+              <thead>
+                <tr>
+                  <th>Device ID</th>
+                  <th>Device Name</th>
+                  <th>District</th>
+                  <th>Event</th>
+                  <th>Timestamp</th>
+                  <th>Deactivate</th>
+                </tr>
+              </thead>
+              <tbody id="events2TableBody">
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <footer class="main-footer">
+    <strong>Copyright &copy;IS4151</a>
+    </strong>
+    All rights reserved.
+  </footer>
+
+</body>
+
+<script src="{{ url_for('static', filename='/js/index.js') }}"></script>
+
+</body>
+
+</html>
