@@ -1,15 +1,11 @@
 from flask import Flask, jsonify, request, render_template
 import json
 import mysql.connector
+import requests
 
 app = Flask(__name__)
 
-districts = [
-    {
-        'district_id': 1,
-        'district_name': 'District One'
-    }
-]
+globalLD = False
 
 @app.route('/')
 def home():
@@ -112,5 +108,67 @@ def add_event():
     conn.close()
 
     return jsonify(post_data)
+
+@app.route('/deactivateLocalLD', methods=['POST'])
+def deactivateLocalLD():
+
+    receivedJson = request.get_json()
+
+    districtToDeactivate = receivedJson[0]
+    eventToDeactivate = receivedJson[1]
+
+    print('districtToDeact: ' + str(districtToDeactivate))
+    print('eventToDeact: ' + str(eventToDeactivate))
+
+    r = requests.get('http://127.0.0.1:5001/deactivateLocalLD')
+    print(type(r.text))
+
+    conn = mysql.connector.connect(
+    host='localhost',
+    user='root',
+    passwd='password',
+    database='is4151',
+    )
+
+    c = conn.cursor()
+    c.execute('UPDATE events SET deactivated = 1 WHERE originDistrict = %s AND event = %s', (districtToDeactivate,eventToDeactivate,))
+
+    conn.commit()
+    conn.close()
+
+    return jsonify(True)
+
+@app.route('/getGlobalLDstatus', methods=['GET'])
+def getGlobalLDstatus():
+
+    global globalLD
+
+    return jsonify(globalLD)
+
+@app.route('/activateGlobalLD', methods=['POST'])
+def activateGlobalLD():
+
+    global globalLD
+
+    globalLD = True
+    r = requests.get('http://127.0.0.1:5001/activateGlobalLD')
+
+    if (r.text == 'true\n'):
+        return jsonify(True)
+    else:
+        return jsonify(False)
+
+@app.route('/deactivateGlobalLD', methods=['POST'])
+def deactivateGlobalLD():
+
+    global globalLD
+
+    globalLD = False
+    r = requests.get('http://127.0.0.1:5001/deactivateGlobalLD')
+
+    if (r.text == 'true\n'):
+        return jsonify(True)
+    else:
+        return jsonify(False)
 
 app.run(port=5000)

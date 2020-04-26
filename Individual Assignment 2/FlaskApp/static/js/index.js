@@ -144,7 +144,31 @@ $(document).ready( function() {
                 });
             }
         }
-    })
+    });
+
+
+    $.ajax({
+        url: "http://127.0.0.1:5000/getGlobalLDstatus",
+        method: "GET",
+        contentType: "application/json",
+        success: function (answer) {
+            console.log(answer)
+            if (answer) {
+                $('#currentGlobalLDStatusText').append(
+                    `
+                    <h2 class="text-danger text-center">IN FORCE</h2>
+                    `
+                )
+            } else {
+                $('#currentGlobalLDStatusText').append(
+                    `
+                    <h2 class="text-success text-center">NOT IN FORCE</h2>
+                    `
+                )
+            }
+        }
+    });
+
 });
 
 $(document).on('click', '.deactivateLocalLD', function() {
@@ -154,32 +178,119 @@ $(document).on('click', '.deactivateLocalLD', function() {
     let district = $(this).data("district");
     let event = $(this).data("event");
 
-    $.ajax({
-        url: "http://localhost:5001/deactivateLocalLD",
-        method: "POST",
-        data: {district: 1},
-        contentType: "application/json",
-        success: function (answer) {
-            console.log(answer);
-        }
-    });
-})
-
-$('#postSampleDataButton').click(function() {
-    console.log('button clicked');
-    let districtData = [];
-    tracker1 = [1000, 'tiget'];
-    districtData.push(tracker1);
+    districtData = [originDistrict, event];
 
     $.ajax({
-        url: "http://127.0.0.1:5000/addDistrictData",
+        url: "http://127.0.0.1:5000/deactivateLocalLD",
         method: "POST",
         contentType: "application/json",
         data: JSON.stringify(districtData),
         success: function (answer) {
-            console.log(answer);
+            console.log(answer)
+
+            if (answer){
+                Swal.fire({
+                    title: 'Success',
+                    text: "Local Lockdown Disabled",
+                    icon: 'success',
+                    confirmButtonColor: '#3085d6',
+                    confirmButtonText: 'Confirm'
+                  }).then((result) => {
+                    if (result.value) {
+                        location.reload();
+                    }
+                  })
+            } else {
+                Swal.fire({
+                    title: 'Error',
+                    text: "An error occurred",
+                    icon: 'warning',
+                    confirmButtonColor: '#d9534f',
+                    confirmButtonText: 'Confirm'
+                  }).then((result) => {
+                    if (result.value) {
+                        location.reload();
+                    }
+                  })
+            }
         }
-    })
+    });
+})
+
+$('#activateGlobalLDButton').click(function() {
+
+    $.ajax({
+        url: "http://127.0.0.1:5000/activateGlobalLD",
+        method: "POST",
+        contentType: "application/json",
+        success: function (answer) {
+            console.log(answer)
+            if (answer){
+                Swal.fire({
+                    title: 'Success',
+                    text: "Global Lockdown Activated",
+                    icon: 'success',
+                    confirmButtonColor: '#3085d6',
+                    confirmButtonText: 'Confirm'
+                  }).then((result) => {
+                    if (result.value) {
+                        location.reload();
+                    }
+                  })
+            } else {
+                Swal.fire({
+                    title: 'Error',
+                    text: "An error occurred",
+                    icon: 'warning',
+                    confirmButtonColor: '#d9534f',
+                    confirmButtonText: 'Confirm'
+                  }).then((result) => {
+                    if (result.value) {
+                        location.reload();
+                    }
+                  })
+            }
+        }
+    });
+});
+
+$('#deactivateGlobalLDButton').click(function() {
+
+
+    $.ajax({
+        url: "http://127.0.0.1:5000/deactivateGlobalLD",
+        method: "POST",
+        contentType: "application/json",
+        success: function (answer) {
+            console.log(answer)
+
+            if (answer){
+                Swal.fire({
+                    title: 'Success',
+                    text: "Global Lockdown Disabled",
+                    icon: 'success',
+                    confirmButtonColor: '#3085d6',
+                    confirmButtonText: 'Confirm'
+                  }).then((result) => {
+                    if (result.value) {
+                        location.reload();
+                    }
+                  })
+            } else {
+                Swal.fire({
+                    title: 'Error',
+                    text: "An error occurred",
+                    icon: 'warning',
+                    confirmButtonColor: '#d9534f',
+                    confirmButtonText: 'Confirm'
+                  }).then((result) => {
+                    if (result.value) {
+                        location.reload();
+                    }
+                  })
+            }
+        }
+    });
 });
 
 $(document).ajaxStart(function () {

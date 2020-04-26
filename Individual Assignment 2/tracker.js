@@ -7,14 +7,14 @@ RELEASE: let district = 2
 DEVELOPMENT: let state = 1 (pretend already handshaken)
 DEVELOPMENT: let district = 2
 */
-let state = 1
+let state = 0
 let personalWarningState = 0
 let temperatureDiff = 0
-let district = 2
+let district = 1
 let randomWaitPeriod = 0
 let handshakeStartTime = 0
 let commandStartTime = 0
-let numberOfHops = 1
+let numberOfHops = 1x
 let buffer: string[] = []
 let msgHistory: string[] = []
 let alreadyBroadcasted = false
@@ -34,24 +34,84 @@ radio.onReceivedString(function (receivedString: string) {
     }
 
     if (receivedString == "act=localLD") {
+        alreadyBroadcasted = false
+
+        for (let msg of msgHistory) {
+            if (msg == receivedString) {
+                alreadyBroadcasted = true
+                break
+            } else {
+                alreadyBroadcasted = false
+            }
+        }
+
+        if (!alreadyBroadcasted) {
+            broadcast(receivedString, true)
+        }
+        
         for (let i = 0; i < 5; i++){
             led.plot(3, i)
         }
     }
 
     if (receivedString == "deact=localLD") {
+        alreadyBroadcasted = false
+
+        for (let msg of msgHistory) {
+            if (msg == receivedString) {
+                alreadyBroadcasted = true
+                break
+            } else {
+                alreadyBroadcasted = false
+            }
+        }
+
+        if (!alreadyBroadcasted) {
+            broadcast(receivedString, true)
+        }
+
         for (let i = 0; i < 5; i++){
             led.unplot(3, i)
         }
     }
 
     if (receivedString == "act=globalLD") {
+        alreadyBroadcasted = false
+
+        for (let msg of msgHistory) {
+            if (msg == receivedString) {
+                alreadyBroadcasted = true
+                break
+            } else {
+                alreadyBroadcasted = false
+            }
+        }
+
+        if (!alreadyBroadcasted) {
+            broadcast(receivedString, true)
+        }
+
         for (let i = 0; i < 5; i++){
             led.plot(4, i)
         }
     }
 
     if (receivedString == "deact=globalLD") {
+        alreadyBroadcasted = false
+
+        for (let msg of msgHistory) {
+            if (msg == receivedString) {
+                alreadyBroadcasted = true
+                break
+            } else {
+                alreadyBroadcasted = false
+            }
+        }
+
+        if (!alreadyBroadcasted) {
+            broadcast(receivedString, true)
+        }
+
         for (let i = 0; i < 5; i++){
             led.unplot(4, i)
         }
@@ -203,12 +263,15 @@ basic.forever(function () {
 function displayLocalTemp() {
     let previousTemperatureDiff = temperatureDiff
     temperatureDiff = input.temperature() - 30
+
     if (temperatureDiff <= 0) {
+        temperatureDiff = 0
         for (let i = 0; i < 5; i++) {
             led.unplot(0, i)
             led.unplot(1, i)
         }
     } else if (temperatureDiff >= 10) {
+        temperatureDiff = 10
         for (let i = 0; i < 5; i++) {
             led.plot(0, i)
             led.plot(1, i)

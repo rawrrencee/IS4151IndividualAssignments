@@ -70,7 +70,7 @@
   <script
     src="{{ url_for('static', filename='/bower_components/datatables.net-bs/js/responsive.bootstrap.min.js') }}"></script>
   <!-- SweetAlert2 -->
-  <script src="{{ url_for('static', filename='/plugins/sweetalert2/sweetalert2.all.js') }}"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@9"></script>
   <!-- iCheck 1.0.1 -->
   <script src="{{ url_for('static', filename='/plugins/iCheck/icheck.min.js') }}"></script>
   <!-- date-range-picker -->
@@ -201,6 +201,17 @@
           <h3 class="box-title">Events</h3>
         </div>
         <div class="box-body">
+          <div class="row">
+            <h3 class="text-center"><b>Global Lockdown Status</b></h3>
+            <div id="currentGlobalLDStatusText"></div>
+          </div>
+          <div class="row" style="margin-top: 20px;">
+            <div class="col-lg-12 text-center">
+              <button id="activateGlobalLDButton" type="button" class="btn btn-sm btn-danger">Activate Global Lockdown</button> 
+              <button id="deactivateGlobalLDButton" type="button" class="btn btn-sm btn-success">Dectivate Global Lockdown</button> 
+            </div>
+          </div>
+          <hr />
           <div class="row">
             <div class="col-lg-12" style="margin-top: 20px;">
               <h3 class="text-center"><b>District 1</b></h3>

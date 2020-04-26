@@ -3,26 +3,48 @@ import time
 import sqlite3
 import socket
 
-def server():
+def listenOnServer():
 	host = socket.gethostname()
 	port = 8888
 
 	s = socket.socket()
 	s.bind((host, port))
 
-	s.listen(1)
-	client_socket, adress = s.accept()
-	
-	print("Connection from: " + str(adress))
-	
-	data = client_socket.recv(1024).decode('utf-8')
-	
-	print('From online user: ' + data)
+	s.settimeout(2)
+	try:
+		s.listen(2)
+		client_socket, adress = s.accept()
+		sendMessageResponse = ''
+		
+		print("Connection from: " + str(adress))
+		
+		data = client_socket.recv(1024).decode('utf-8')
+		
+		print('From online user: ' + data)
 
-	if (data == 'init=localLD'):
-		response = 'Local Lockdown Initialised'
-	
-	client_socket.send(response.encode('utf-8'))
+		if (data == 'deact=localLD'):
+			sendCommand('deact=localLD')
+			deactivateEvent1Sql = 'UPDATE events SET deactivated = 1 WHERE originDistrict = ? AND event = ?'
+			
+			c = conn.cursor()
+			c.execute(deactivateEvent1Sql, (district, 1))
+			conn.commit()
+			
+			sendMessageResponse = 'Local Lockdown Deactivated'
+
+		elif (data == 'act=globalLD'):
+			sendCommand('act=globalLD')
+			
+			sendMessageResponse = 'Global Lockdown Activated'
+		
+		elif (data == 'deact=globalLD'):
+			sendCommand('deact=globalLD')
+			
+			sendMessageResponse = 'Global Lockdown Deactivated'
+
+		client_socket.send(sendMessageResponse.encode('utf-8'))
+	except socket.timeout:
+		pass
 	
 def sendCommand(command):
 		
@@ -89,6 +111,14 @@ def saveIntruderData(dataPackets):
 		c.execute(insertSql, (deviceId, deviceName, str(district), str(intruderDistrict), str(temperature), fever, intruder,))
 
 		if (event1Sql != ''):
+			c.execute(event1Sql, (deviceId, deviceName, str(district), str(intruderDistrict),))
+			sendCommand('act=localLD')
+		
+		if (event2Sql != ''):
+			c.execute(event2Sql, (deviceId, deviceName, str(district), str(intruderDistrict),))
+
+		""" CHECKS IF THERE ARE OUTSTANDING EVENTS (SO ONLY 1 ROW PER EVENT IS PUBLISHED)
+		if (event1Sql != ''):
 			checkOutstandingEventsSql = "SELECT * FROM events WHERE deactivated = 0"
 			c.execute(checkOutstandingEventsSql)
 			outstandingEvents = c.fetchall()
@@ -120,6 +150,7 @@ def saveIntruderData(dataPackets):
 						break
 				if (existingEvent2 == False):
 					c.execute(event2Sql, (deviceId, deviceName, str(district), str(intruderDistrict),))
+		"""
 	
 	conn.commit()
 	
@@ -161,6 +192,11 @@ def saveData(dataPackets):
 		c.execute(insertSql, (deviceId, deviceName, str(district), str(district), str(temperature), fever, intruder,))
 		
 		if (eventSql != ''):
+			c.execute(eventSql, (deviceId, deviceName, str(district), str(district),))
+			sendCommand('act=localLD')
+
+		""" CHECKS IF THERE ARE OUTSTANDING EVENTS (SO ONLY 1 ROW PER EVENT IS PUBLISHED)
+		if (eventSql != ''):
 			checkOutstandingEventsSql = "SELECT * FROM events WHERE deactivated = 0"
 			c.execute(checkOutstandingEventsSql)
 			outstandingEvents = c.fetchall()
@@ -176,6 +212,7 @@ def saveData(dataPackets):
 				if (existingEvent1 == False):
 					c.execute(eventSql, (deviceId, deviceName, str(district), str(district),))
 					sendCommand('act=localLD')
+		"""
 
 	conn.commit()
 	
@@ -220,6 +257,9 @@ try:
 				print('Connected to micro:bit device {}...'.format(mb))
 			
 			while True:
+
+				print('Listening on server for Edge commands:')
+				listenOnServer()
 
 				numCycles = 0
 

@@ -1,8 +1,12 @@
-import connexion
+#import connexion
 import sqlite3
 import socket
+from flask import Flask, jsonify, request, render_template, current_app
+import json
 
-app = connexion.App(__name__, specification_dir='./')
+app = Flask(__name__)
+
+#app = connexion.App(__name__, specification_dir='./')
 
 @app.route('/')
 def index():
@@ -37,16 +41,25 @@ def index():
 	
 	return html
 
-@app.route('/deactivateLocalLD')
-def client():
+@app.route('/deactivateLocalLD', methods=['GET', 'POST'])
+def deactivateLocalLD():
 	host = socket.gethostname()
 	port = 8888
 
 	s = socket.socket()
 
-	try:
-		s.connect((host, port))
+	connected = False
 
+	while not connected:
+		print('Trying to connect')
+		try:
+			s.connect((host, port))
+			connected = True
+		except Exception:
+			print('not connected')
+			pass
+
+	try:
 		message = 'deact=localLD'
 		
 		s.send(message.encode('utf-8'))
@@ -54,11 +67,81 @@ def client():
 		print('Received from server: ' + data)
 	
 		s.close()
-		return '<h1>Local Lockdown Initiated</h1><a href="/"><button type="button" >&larr; Back</button></a>'
+		return jsonify(True)
 	
 	except ConnectionRefusedError:
-		return '<h1>There was a connection error.</h1><a href="/"><button type="button" >&larr; Back</button></a>'
+		return jsonify(False)
+
+@app.route('/activateGlobalLD', methods=['GET', 'POST'])
+def activateGlobalLD():
+	host = socket.gethostname()
+	port = 8888
+
+	s = socket.socket()
+
+	connected = False
+
+	while not connected:
+		print('Trying to connect')
+		try:
+			s.connect((host, port))
+			connected = True
+		except Exception:
+			print('not connected')
+			pass
+
+	try:
+		message = 'act=globalLD'
+		
+		s.send(message.encode('utf-8'))
+		data = s.recv(1024).decode('utf-8')
+		print('Received from server: ' + data)
+	
+		s.close()
+
+		callback = request.args.get('callback', False)
+
+		content = str(callback) + '(' + str(data) + ')'
+		return jsonify(True)
+	
+	except ConnectionRefusedError:
+		return jsonify(False)
+
+@app.route('/deactivateGlobalLD', methods=['GET', 'POST'])
+def deactivateGlobalLD():
+	host = socket.gethostname()
+	port = 8888
+
+	s = socket.socket()
+
+	connected = False
+
+	while not connected:
+		print('Trying to connect')
+		try:
+			s.connect((host, port))
+			connected = True
+		except Exception:
+			print('not connected')
+			pass
+
+	try:
+		message = 'deact=globalLD'
+		
+		s.send(message.encode('utf-8'))
+		data = s.recv(1024).decode('utf-8')
+		print('Received from server: ' + data)
+	
+		s.close()
+
+		callback = request.args.get('callback', False)
+
+		content = str(callback) + '(' + str(data) + ')'
+		return jsonify(True)
+	
+	except ConnectionRefusedError:
+		return jsonify(False)
 
 # If we're running in stand alone mode, run the application
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5001, debug=True)
+    app.run(host='127.0.0.1', port=5001, debug=True)

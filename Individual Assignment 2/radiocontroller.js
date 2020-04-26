@@ -10,6 +10,7 @@ let buffer: string[] = []
 let msgHistory: string[] = []
 let DISTRICT_ORIGIN = 1
 let district = DISTRICT_ORIGIN
+let globalLD = false
 
 //CONFIGURATION
 radio.setGroup(DISTRICT_ORIGIN)
@@ -91,15 +92,22 @@ serial.onDataReceived(serial.delimiters(Delimiters.NewLine), function () {
                 commandStartTime = input.runningTime()
                 sensorValues = []
                 radio.sendString("sensor=temp")
+                if (globalLD) {
+                    radio.sendString('act=globalLD')
+                } else {
+                    radio.sendString('deact=globalLD')
+                }
             }
         }
-    } else if (data.includes('act=localLD')) {
+    } else if (data == 'act=localLD') {
         radio.sendString('act=localLD')
-    } else if (data.includes('deact=localLD')) {
+    } else if (data == 'deact=localLD') {
         radio.sendString('deact=localLD')
-    } else if (data.includes('act=globalLD')) {
+    } else if (data == 'act=globalLD') {
+        globalLD = true
         radio.sendString('act=globalLD')
-    } else if (data.includes('deact=globalLD')) {
+    } else if (data == 'deact=globalLD') {
+        globalLD = false
         radio.sendString('deact=globalLD')
     }
 })
